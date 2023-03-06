@@ -27,13 +27,15 @@ import java.util.Map;
  * specific language governing permissions and limitations under the License. under the License.
  */
 
- import io;
-  class Fac {
-  public int computeFac (int num ) {
-  int num_aux ;
-  return false;
-  }
-  public static void main ( String [] args ){
-  io. println ( new Fac (). computeFac ()); // assuming the existence
-  // of the classfile io. class
- }}
+import io;
+
+class Fac {
+    public int computeFac (int num ) {
+        int num_aux ;
+        return false;
+    }
+    public static void main ( String [] args ){
+        io.println(new Fac().computeFac()); // assuming the existence
+        // of the classfile io. class
+    }
+}

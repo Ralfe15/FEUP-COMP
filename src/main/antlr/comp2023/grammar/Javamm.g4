@@ -16,53 +16,52 @@ program
     ;
 
 importDeclaration
-    : 'import' ID ('.' ID)* ';'
+    : 'import' value=ID ('.' value=ID)* ';'
     ;
 
 classDeclaration
-    : 'class' ID ('extends' ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
+    : 'class' className=ID ('extends' extension=ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
     ;
 
 varDeclaration
-    : type ID ';'
+    : type value=ID ';'
     ;
 
 methodDeclaration
-    : ('public')? type ID '(' ( type ID ( ',' type ID )* )? ')' '{' ( varDeclaration)* (statement)* 'return' expression ';' '}'
-    // Check if main arg is string in jmmAnalysis stage
-    | ('public')? 'static' 'void' 'main' '(' ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}'
+    : ('public')? type name=ID '(' ( type arg=ID ( ',' type ID )* )? ')' '{' ( varDeclaration)* (statement)* 'return' expression ';' '}' #MethodDecl
+    | ('public')? 'static' 'void' 'main' '(' ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
     ;
 
 type
-    : 'int' '[' ']'
-    | 'boolean'
-    | 'int'
+    : value='int' '[' ']'
+    | value='boolean'
+    | value='int'
     | ID
     ;
 
 statement
-    : '{' ( statement )* '}'
-    | 'if' '(' expression ')' statement 'else' statement | 'while' '(' expression ')' statement
-    | expression ';'
-    | ID '=' expression ';'
-    | ID '[' expression ']' '=' expression ';'
+    : '{' ( statement )* '}' #BlockStmt
+    | 'if' '(' expression ')' statement 'else' statement #IfElseStmt
+    | 'while' '(' expression ')' statement #WhileStmt
+    | expression ';' #ExprStmt
+    | ID '=' expression ';' #AssignStmt
+    | ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
     ;
 
 expression
-    : '!' expression
-    | expression ( '*' | '/' ) expression
-    | expression ( '+' | '-' ) expression
-    | expression ( '>' | '<' ) expression
-    | expression '&&' expression
-    | expression '||' expression
-    | expression '[' expression ']'
-    | expression '.' 'length'
-    | expression '.' ID '(' ( expression ( ',' expression )* )? ')' | 'new' 'int' '[' expression ']'
-    | 'new' ID '(' ')'
-    | '(' expression ')'
-    | 'true'
-    | 'false'
-    | ID
-    | INTEGER
-    | 'this'
+    : '!' expression #NotExpr
+    | expression op=( '*' | '/' ) expression #MultDivExpr
+    | expression op=( '+' | '-' ) expression #AddSubExpr
+    | expression op=( '>' | '<' ) expression #RelExpr
+    | expression op=('&&' | '||') expression #AndOrExpr
+    | expression '[' expression ']' #ArrayAccessExpr
+    | expression '.' 'length' #ArrayLengthExpr
+    | expression '.' method=ID '(' ( expression ( ',' expression )* )? ')' #MethodCallExpr
+    | 'new' 'int' '[' expression ']' #NewIntArrayExpr
+    | 'new' object=ID '(' ')' #NewObjectExpr
+    | '(' expression ')' #ParenExpr
+    | bool=( 'true' | 'false' ) #BoolExpr
+    | value=ID #IdExpr
+    | value=INTEGER #IntExpr
+    | 'this' #ThisExpr
     ;
