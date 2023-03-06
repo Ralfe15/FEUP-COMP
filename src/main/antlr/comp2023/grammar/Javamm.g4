@@ -12,7 +12,7 @@ WS : [ \t\n\r\f]+ -> skip ;
 TRADICIONAL_COMMENT : '/*' .*? '*/' -> skip;
 EOL_COMMENT: '//' ~[\r\n]* -> skip;
 program
-    : importDeclaration* classDeclaration+ EOF
+    : importDeclaration* methodDeclaration* classDeclaration* EOF
     ;
 
 importDeclaration
