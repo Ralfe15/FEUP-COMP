@@ -12,7 +12,7 @@ WS : [ \t\n\r\f]+ -> skip ;
 TRADICIONAL_COMMENT : '/*' .*? '*/' -> skip;
 EOL_COMMENT: '//' ~[\r\n]* -> skip;
 program
-    : importDeclaration* classDeclaration+ EOF
+    : importDeclaration* methodDeclaration* classDeclaration* EOF
     ;
 
 importDeclaration
@@ -29,7 +29,8 @@ varDeclaration
 
 methodDeclaration
     : ('public')? type ID '(' ( type ID ( ',' type ID )* )? ')' '{' ( varDeclaration)* (statement)* 'return' expression ';' '}'
-    | ('public')? 'static' 'void' 'main' '(' 'String' '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}'
+    // Check if main arg is string in jmmAnalysis stage
+    | ('public')? 'static' 'void' 'main' '(' ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}'
     ;
 
 type
