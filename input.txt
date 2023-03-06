@@ -30,7 +30,7 @@ import java.util.Map;
 import io;
 
 class Fac {
-    public int computeFac (int num ) {
+    public int computeFac (int num, int num2, int num3 ) {
         int num_aux ;
         return false;
     }

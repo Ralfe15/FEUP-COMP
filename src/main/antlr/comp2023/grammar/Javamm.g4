@@ -16,27 +16,35 @@ program
     ;
 
 importDeclaration
-    : 'import' value=ID ('.' value=ID)* ';'
+    : 'import' value+=ID ('.' value+=ID)* ';'
     ;
 
 classDeclaration
-    : 'class' className=ID ('extends' extension=ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
+    : 'class' name=ID ('extends' extension=ID)? '{' (varDeclaration)* (methodDeclaration)* '}'
     ;
 
 varDeclaration
-    : type value=ID ';'
+    : type varName=ID ';'
     ;
 
 methodDeclaration
-    : ('public')? type name=ID '(' ( type arg=ID ( ',' type ID )* )? ')' '{' ( varDeclaration)* (statement)* 'return' expression ';' '}' #MethodDecl
+    : ('public')? returnType=type name=ID '(' args ')' '{' ( varDeclaration)* (statement)* 'return' expression ';' '}' #MethodDecl
     | ('public')? 'static' 'void' 'main' '(' ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
     ;
 
+args
+    : argums (',' argums)*
+    ;
+
+argums
+    : type argName=ID
+    ;
+
 type
-    : value='int' '[' ']'
-    | value='boolean'
-    | value='int'
-    | ID
+    : 'int' '[' ']' #IntArrayType
+    | 'boolean' #BoolType
+    | 'int' #IntType
+    | ID #IdType
     ;
 
 statement
