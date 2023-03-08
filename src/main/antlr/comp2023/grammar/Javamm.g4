@@ -28,7 +28,7 @@ varDeclaration
     ;
 
 methodDeclaration
-    : ('public')? returnType=type name=ID '(' args ')' '{' ( varDeclaration)* (statement)* 'return' expression ';' '}' #MethodDecl
+    : ('public')? type name=ID '(' args? ')' '{' ( varDeclaration)* (statement)* returnExpression '}' #MethodDecl
     | ('public')? 'static' 'void' 'main' '(' ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
     ;
 
@@ -54,6 +54,10 @@ statement
     | expression ';' #ExprStmt
     | ID '=' expression ';' #AssignStmt
     | ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
+    ;
+
+returnExpression
+    : 'return' expression ';'
     ;
 
 expression
