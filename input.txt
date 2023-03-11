@@ -34,7 +34,7 @@ class Fac {
         int num_aux ;
         return false;
     }
-    public static void mai ( String [] args ){
+    public static void main ( String [] args ){
         io.println(new Fac().computeFac()); // assuming the existence
         // of the classfile io. class
     }
