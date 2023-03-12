@@ -33,18 +33,18 @@ methodDeclaration
     ;
 
 args
-    : argums (',' argums)*
+    : argument (',' argument)*
     ;
 
-argums
+argument
     : type argName=ID
     ;
 
 type
-    : 'int' '[' ']' #IntArrayType
-    | 'boolean' #BoolType
-    | 'int' #IntType
-    | ID #IdType
+    : rawType='int' '[' ']' #IntArrayType
+    | rawType='boolean' #BoolType
+    | rawType='int' #IntType
+    | rawType=ID #IdType
     ;
 
 statement

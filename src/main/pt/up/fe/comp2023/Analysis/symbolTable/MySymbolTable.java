@@ -4,33 +4,34 @@ import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
+import pt.up.fe.comp2023.Analysis.types.ClassInfo;
+import pt.up.fe.comp2023.Analysis.types.MethodInfo;
+import pt.up.fe.comp2023.Analysis.visitors.ClassVisitor;
 import pt.up.fe.comp2023.Analysis.visitors.ImportVisitor;
+import pt.up.fe.comp2023.Analysis.visitors.MethodVisitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MySymbolTable implements SymbolTable {
     // Class
-    String className;
-    String extendsSuper;
-    List<Symbol> fields;
+    ClassInfo classInfo = new ClassInfo();
 
     // Imports
     List<String> imports = new ArrayList<>();
 
-    // Methods (keys are method name -> identifier)
-    HashMap<String, List<Symbol>> methodParameters;
-    HashMap<String, List<Symbol>> methodVariables;
-    HashMap<String, Type> methodTypes;
+    // Methods
+    Map<String, MethodInfo> methods = new HashMap<>();
 
 
     public MySymbolTable(JmmParserResult jmmParserResult){
         new ImportVisitor().start(jmmParserResult.getRootNode(), imports);
-        fields = new ArrayList<>();
-        methodParameters = new HashMap<>();
-        methodVariables = new HashMap<>();
-        methodTypes = new HashMap<>();
+        new ClassVisitor().start(jmmParserResult.getRootNode(), classInfo);
+        MethodVisitor methodVisitor = new MethodVisitor();
+        methodVisitor.visitStart(jmmParserResult.getRootNode(), methods);
+
     }
 
     @Override
@@ -40,36 +41,36 @@ public class MySymbolTable implements SymbolTable {
 
     @Override
     public String getClassName() {
-        return className;
+        return classInfo.getName();
     }
 
     @Override
     public String getSuper() {
-        return extendsSuper;
+        return classInfo.getSuperName();
     }
 
     @Override
     public List<Symbol> getFields() {
-        return fields;
+        return classInfo.getFields();
     }
 
     @Override
     public List<String> getMethods() {
-        return new ArrayList<>(methodTypes.keySet());
+        return new ArrayList<>(methods.keySet());
     }
 
     @Override
     public Type getReturnType(String s) {
-        return methodTypes.get(s);
+        return methods.get(s).getRetType();
     }
 
     @Override
     public List<Symbol> getParameters(String s) {
-        return methodParameters.get(s);
+        return methods.get(s).getArgs();
     }
 
     @Override
     public List<Symbol> getLocalVariables(String s) {
-        return methodVariables.get(s);
+        return methods.get(s).getLocalVariables();
     }
 }
