@@ -36,7 +36,6 @@ public class ClassVisitor extends AJmmVisitor<ClassInfo, Boolean> {
     }
 
     private Boolean visitVarDeclaration(JmmNode varDeclarationNode, ClassInfo classSignature) {
-        System.out.println(varDeclarationNode.toTree());
         JmmNode typeNode = varDeclarationNode.getJmmChild(0);
         String name = varDeclarationNode.get("varName");
         Type fieldType = new Type(typeNode.get("rawType"), typeNode.getKind().equals("IntArrayType"));

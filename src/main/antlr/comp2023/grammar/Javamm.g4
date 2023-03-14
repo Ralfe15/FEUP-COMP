@@ -66,6 +66,7 @@ expression
     | expression op=( '+' | '-' ) expression #AddSubExpr
     | expression op=( '>' | '<' ) expression #RelExpr
     | expression op=('&&' | '||') expression #AndOrExpr
+    | expression op=('+=' | '*=' | '/=' | '-=') expression #AssignmentExpr
     | expression '[' expression ']' #ArrayAccessExpr
     | expression '.' 'length' #ArrayLengthExpr
     | expression '.' method=ID '(' ( expression ( ',' expression )* )? ')' #MethodCallExpr

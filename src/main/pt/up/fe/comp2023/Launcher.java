@@ -52,8 +52,7 @@ public class Launcher {
 
         // Analysis stage
         JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
-        System.out.println(analysisResult.getSymbolTable().getFields());
-
+        System.out.println(analysisResult.getSymbolTable().print());
 
         // ... add remaining stages
     }
