@@ -52,8 +52,6 @@ statement
     | 'if' '(' expression ')' statement 'else' statement #IfElseStmt
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExprStmt
-    | varName=ID '=' expression ';' #AssignStmt
-    | varName=ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
     ;
 
 returnExpression
@@ -69,13 +67,13 @@ expression
     | expression op=( '+' | '-' ) expression #AddSubExpr
     | expression op=( '>' | '<' ) expression #RelExpr
     | expression op=('&&' | '||') expression #AndOrExpr
-    | expression op=('+=' | '*=' | '/=' | '-=') expression #AssignmentExpr
+    | expression op='=' expression #AssignmentExpr
     | expression '.' 'length' #ArrayLengthExpr
     | expression '.' method=ID '(' ( expression ( ',' expression )* )? ')' #MethodCallExpr
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' object=ID '(' ')' #NewObjectExpr
     | bool=( 'true' | 'false' ) #BoolExpr
-    | value=ID #IdExpr
+    | value=ID ('[' expression ']')? #IdExpr
     | value=INTEGER #IntExpr
     | 'this' #ThisExpr
     ;

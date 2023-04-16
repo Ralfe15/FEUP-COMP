@@ -84,7 +84,7 @@ public class MySymbolTable implements SymbolTable {
         var method = getClosestMethod(node);
         if (method.isPresent()) {
             String methodName = method.get().getKind().equals("MethodDecl") ?
-                    method.get().getChildren().get(1).get("name") : "main";
+                    method.get().get("name") : "main";
             for (Symbol symbol : getLocalVariables(methodName)) {
                 if (symbol.getName().equals(name)) {
                     return Optional.of(symbol);

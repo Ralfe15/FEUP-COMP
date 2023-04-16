@@ -40,20 +40,22 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         addVisit("MainMethodDecl", this::visitMainMethod);
         addVisit("IntExpr", this::visitIntLiteral);
         addVisit("BoolExpr", this::visitBooleanLiteral);
-//        addVisit("MultDivExpr", this::visitBinOp);
-//        addVisit("AddSubExpr", this::visitBinOp);
-//        addVisit("RelExpr", this::visitBinOp);
-//        addVisit("AndOrExpr", this::visitBinOp);
-//        addVisit("AssignmentExpr", this::visitBinOp);
+        addVisit("IdExpr", this::visitIdExpr);
+        addVisit("ExprStmt", this::visitExpression);
+        addVisit("ReturnExpression", this::visitReturn);
 
-        addVisit("AssignStmt", this::visitAssignStatement);
-        addVisit("ArrayAssignStmt", this::visitAssignStatement);
+        addVisit("MultDivExpr", this::visitBinOp);
+        addVisit("AddSubExpr", this::visitBinOp);
+        addVisit("RelExpr", this::visitBinOp);
+        addVisit("AndOrExpr", this::visitBinOp);
+        addVisit("AssignmentExpr", this::visitBinOp);
+
 
         setDefaultVisit((node, dummy) -> true);
     }
 
-
     private TempVar createTemporaryVariable(JmmNode closestNode) {
+        System.out.println("tempvar");
         tempVarCounter += 1;
         String name = "t" + tempVarCounter;
         while (symbolTable.getClosestSymbol(closestNode, name).isPresent()) {
@@ -127,6 +129,11 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         return true;
     }
 
+    private Boolean visitExpression(JmmNode node, TempVar dummy) {
+        visit(node.getJmmChild(0));
+        return true;
+    }
+
     private Boolean visitMethod(JmmNode node, TempVar dummy) {
         String methodName = node.get("name");
         var returnType = symbolTable.getReturnType(methodName);
@@ -143,7 +150,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         boolean returned = false;
         int currentTemporaryVariableCounter = tempVarCounter;
         for (var child : node.getChildren()) {
-            if (child.getKind().equals("Return")) { // TODO: Add visit return expression
+            if (child.getKind().equals("ReturnExpression")) { // TODO: Add visit return expression
                 visit(child);
                 returned = true;
             } else { // TODO: Add visit to method body stuff
@@ -195,19 +202,19 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         return true;
     }
 
-    private Boolean visitAssignStatement(JmmNode jmmNode, TempVar tempVar) {
-        // Regular assign statement
-        if(jmmNode.getKind().equals("AssignStmt")) {
-            String varName = jmmNode.get("varName");
+    private Boolean visitReturn(JmmNode node, TempVar dummy) {
+        TempVar temp = createTemporaryVariable(node);
+        if (getClosestMethod(node).isPresent()) {
+            String methodName = getClosestMethod(node).get().getKind().equals("MethodDecl") ?
+                    getClosestMethod(node).get().get("name") : "main";
+            temp.setVariableType(symbolTable.getReturnType(methodName));
         }
-
-        // Array assign statement
-        else if (jmmNode.getKind().equals("ArrayAssignStmt")){
-
-        }
+        visit(node.getJmmChild(0), temp);
+        startNewLine();
+        ollirCode.append("ret.").append(getOllirType(temp.getVariableType())).append(" ")
+                .append(temp.getSubstituteWithType()).append(";");
         return true;
     }
-
 
     private Boolean visitBinOp(JmmNode node, TempVar substituteVariable) {
         var t1 = createTemporaryVariable(node);
@@ -215,7 +222,6 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         visit(node.getJmmChild(0), t1);
         t2.setAssignType(t1.getVariableType());
         visit(node.getJmmChild(1), t2);
-
         String operation = node.get("op");
         if (node.getKind().equals("AssignmentExpr")) {
             String ollirType = getOllirType(t1.getVariableType());
@@ -230,20 +236,11 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
                         .append(" ").append(t2.getSubstituteWithType()).append(";");
             }
             return true;
-        } else {
-            String operationCode = switch (operation) {
-                case "or" -> "||";
-                case "and" -> "&&";
-                case "lt" -> "<";
-                case "add" -> "+";
-                case "sub" -> "-";
-                case "mul" -> "*";
-                case "div" -> "/";
-                default -> "OP";
-            };
-            Type operationType = !operationCode.equals("<") ? t1.getVariableType() : new Type("boolean", false);
+        }
+        else  {
+            Type operationType = !operation.equals("<") ? t1.getVariableType() : new Type("boolean", false);
             String tempType = getOllirType(operationType);
-            String code = t1.getSubstituteWithType() + " " + operationCode + "." + tempType + " " + t2.getSubstituteWithType();
+            String code = t1.getSubstituteWithType() + " " + operation + "." + tempType + " " + t2.getSubstituteWithType();
             String tempPrefix = substituteVariable.getVariableName() + "." + tempType + " :=." + tempType + " ";
             substituteVariable.setVariableType(operationType);
             startNewLine();
@@ -262,6 +259,12 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
     private Boolean visitBooleanLiteral(JmmNode node, TempVar substituteVariable) {
         substituteVariable.setValue(node.get("bool").equals("true") ? "1" : "0");
         substituteVariable.setVariableType(new Type("boolean", false));
+        return true;
+    }
+
+    private Boolean visitIdExpr(JmmNode node, TempVar substituteVariable) {
+        substituteVariable.setValue(node.get("value"));
+        substituteVariable.setVariableType(new Type("int", node.getChildren().size()!=0));
         return true;
     }
 
