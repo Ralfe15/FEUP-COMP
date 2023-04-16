@@ -54,9 +54,10 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
             } else if (child.getKind().equals("ReturnExpression")) {
                 // Handle return expression and check if matches function signature
             }
+
             else{
-                String retType = child.get("rawType");
-                type = new Type(retType, child.getKind().equals("IntArrayType"));
+//                String retType = child.get("rawType");
+//                type = new Type(retType, child.getKind().equals("IntArrayType"));
             }
         }
         methods.put(name, new MethodInfo(type, args, localVariables));

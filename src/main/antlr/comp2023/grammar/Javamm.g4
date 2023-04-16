@@ -29,7 +29,7 @@ varDeclaration
 
 methodDeclaration
     : ('public')? type name=ID '(' args? ')' '{' ( varDeclaration)* (statement)* returnExpression '}' #MethodDecl
-    | ('public')? 'static' 'void' 'main' '(' ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
+    | ('public')? 'static' 'void' 'main' '(' argName=ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
     ;
 
 args
@@ -61,18 +61,19 @@ returnExpression
     ;
 
 expression
-    : '!' expression #NotExpr
+    : '(' expression ')' #ParenExpr
+    | expression '[' expression ']' #ArrayAccessExpr
+    | '!' expression #NotExpr
+    | expression op=( '++' | '--' ) #PostIncrDecrExpr
     | expression op=( '*' | '/' ) expression #MultDivExpr
     | expression op=( '+' | '-' ) expression #AddSubExpr
     | expression op=( '>' | '<' ) expression #RelExpr
     | expression op=('&&' | '||') expression #AndOrExpr
     | expression op=('+=' | '*=' | '/=' | '-=') expression #AssignmentExpr
-    | expression '[' expression ']' #ArrayAccessExpr
     | expression '.' 'length' #ArrayLengthExpr
     | expression '.' method=ID '(' ( expression ( ',' expression )* )? ')' #MethodCallExpr
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' object=ID '(' ')' #NewObjectExpr
-    | '(' expression ')' #ParenExpr
     | bool=( 'true' | 'false' ) #BoolExpr
     | value=ID #IdExpr
     | value=INTEGER #IntExpr
