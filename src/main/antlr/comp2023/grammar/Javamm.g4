@@ -52,8 +52,8 @@ statement
     | 'if' '(' expression ')' statement 'else' statement #IfElseStmt
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExprStmt
-    | ID '=' expression ';' #AssignStmt
-    | ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
+    | varName=ID '=' expression ';' #AssignStmt
+    | varName=ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
     ;
 
 returnExpression

@@ -1,23 +1,16 @@
+class CompileArithmetic {
 
-class MethodsAndFields{
-	int field1;
-	boolean field2;
-	MethodsAndFields field3;
+    public static void main(String[] args) {
 
-	public int getField1(){
-		return field1;
-	}
+    }
 
-	public boolean getField2(){
-		return field2;
-	}
+    public int foo() {
+        int a;
+        int b;
 
-	public MethodsAndFields getField3(){
-		return field3;
-	}
+        a = 1;
+        b = 2;
 
-
-	public static void main(String[] args){
-
-	}
+        return a + b;
+    }
 }

@@ -3,6 +3,7 @@ package pt.up.fe.comp2023.Analysis.symbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.Analysis.types.ClassInfo;
 import pt.up.fe.comp2023.Analysis.types.MethodInfo;
@@ -10,10 +11,7 @@ import pt.up.fe.comp2023.Analysis.visitors.ClassVisitor;
 import pt.up.fe.comp2023.Analysis.visitors.ImportVisitor;
 import pt.up.fe.comp2023.Analysis.visitors.MethodVisitor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MySymbolTable implements SymbolTable {
     // Class
@@ -72,5 +70,42 @@ public class MySymbolTable implements SymbolTable {
     @Override
     public List<Symbol> getLocalVariables(String s) {
         return methods.get(s).getLocalVariables();
+    }
+
+    public static Optional<JmmNode> getClosestMethod(JmmNode node) {
+        var method = node.getAncestor("MethodDecl");
+        if (method.isPresent()) {
+            return method;
+        }
+        method = node.getAncestor("MainMethodDecl");
+        return method;
+    }
+    public Optional<Symbol> getClosestSymbol(JmmNode node, String name) {
+        var method = getClosestMethod(node);
+        if (method.isPresent()) {
+            String methodName = method.get().getKind().equals("MethodDecl") ?
+                    method.get().getChildren().get(1).get("name") : "main";
+            for (Symbol symbol : getLocalVariables(methodName)) {
+                if (symbol.getName().equals(name)) {
+                    return Optional.of(symbol);
+                }
+            }
+            for (Symbol symbol : getParameters(methodName)) {
+                if (symbol.getName().equals(name)) {
+                    return Optional.of(symbol);
+                }
+            }
+        }
+        for (Symbol symbol : getFields()) {
+            if (symbol.getName().equals(name)) {
+                return Optional.of(symbol);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public static String getMethodName(JmmNode method) {
+        return method.getKind().equals("MethodDecl") ?
+                method.getChildren().get(1).get("name") : "main";
     }
 }

@@ -13,7 +13,9 @@ public class MyJmmOptimizer implements JmmOptimization {
     public OllirResult toOllir(JmmSemanticsResult jmmSemanticsResult) {
         final StringBuilder code = new StringBuilder();
         OllirGenerator ollirGenerator = new OllirGenerator(code, (MySymbolTable) jmmSemanticsResult.getSymbolTable(), 4);
+        System.out.println(jmmSemanticsResult.getRootNode().toTree());
         ollirGenerator.visit(jmmSemanticsResult.getRootNode());
+        System.out.println(code);
         return new OllirResult(jmmSemanticsResult, code.toString(), Collections.emptyList());
     }
 }

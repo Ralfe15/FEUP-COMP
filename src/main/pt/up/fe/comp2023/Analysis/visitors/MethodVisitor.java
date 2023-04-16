@@ -35,7 +35,7 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
 
     private Boolean visitMethodDeclaration(JmmNode methodDeclaration, Map<String, MethodInfo> methods) {
         String name = methodDeclaration.get("name");
-        Type type = new Type("", false);
+        Type type = new Type(methodDeclaration.getChildren().get(0).get("rawType"), false);
         List<Symbol> args = new ArrayList<>();
         List<Symbol> localVariables = new ArrayList<>();
         for (JmmNode child : methodDeclaration.getChildren()) {
