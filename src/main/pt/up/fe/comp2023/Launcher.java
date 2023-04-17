@@ -6,9 +6,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import pt.up.fe.comp.TestUtils;
+import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp.jmm.ollir.OllirResult;
+import pt.up.fe.comp.jmm.parser.JmmParserResult;
+import pt.up.fe.comp2023.Analysis.MyJmmAnalysis;
 import pt.up.fe.comp2023.Jasmin.JmmBackend;
 import pt.up.fe.comp2023.Optimization.MyJmmOptimizer;
 import pt.up.fe.specs.util.SpecsIo;
@@ -36,13 +39,13 @@ public class Launcher {
         String code = SpecsIo.read(inputFile);
 
         // Instantiate JmmParser
-        // SimpleParser parser = new SimpleParser();
+        SimpleParser parser = new SimpleParser();
 
         // Parse stage
-        // JmmParserResult parserResult = parser.parse(code, config);
+        JmmParserResult parserResult = parser.parse(code, config);
 
         // Check if there are parsing errors
-        // TestUtils.noErrors(parserResult.getReports());
+        TestUtils.noErrors(parserResult.getReports());
 
         // Instantiate JmmAnalysis
         MyJmmAnalysis analyser = new MyJmmAnalysis();
@@ -60,7 +63,7 @@ public class Launcher {
         // ... add remaining stages
         // ---------- OLLIR -> JASMIN -------------
 
-        OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
+        // OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
         /*
         JasminConverter jasminConverter = new JasminConverter();
         JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
