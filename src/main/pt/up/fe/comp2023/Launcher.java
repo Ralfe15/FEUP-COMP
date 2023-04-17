@@ -2,14 +2,18 @@ package pt.up.fe.comp2023;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.Analysis.MyJmmAnalysis;
-import pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable;
+import pt.up.fe.comp2023.Jasmin.JasminConverter;
+import pt.up.fe.comp2023.Jasmin.JmmBackend;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -35,26 +39,37 @@ public class Launcher {
         String code = SpecsIo.read(inputFile);
 
         // Instantiate JmmParser
-        SimpleParser parser = new SimpleParser();
+        // SimpleParser parser = new SimpleParser();
 
         // Parse stage
-        JmmParserResult parserResult = parser.parse(code, config);
+        // JmmParserResult parserResult = parser.parse(code, config);
 
         // Check if there are parsing errors
-        TestUtils.noErrors(parserResult.getReports());
+        // TestUtils.noErrors(parserResult.getReports());
 
         // Instantiate JmmAnalysis
-        MyJmmAnalysis analyser = new MyJmmAnalysis();
+        // MyJmmAnalysis analyser = new MyJmmAnalysis();
 
 //        System.out.println(parserResult.getRootNode().toTree());
 
 //        System.out.println(parserResult.getClass().getName());
 
         // Analysis stage
-        JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
-        System.out.println(analysisResult.getSymbolTable().print());
+        // JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
+        // System.out.println(analysisResult.getSymbolTable().print());
 
         // ... add remaining stages
+        // ---------- OLLIR -> JASMIN -------------
+
+        OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
+        /*
+        JasminConverter jasminConverter = new JasminConverter();
+        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
+         */
+        JmmBackend jasminConverter = new JmmBackend();
+        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
+
+        System.out.println(jasminCode);
     }
 
     private static Map<String, String> parseArgs(String[] args) {
