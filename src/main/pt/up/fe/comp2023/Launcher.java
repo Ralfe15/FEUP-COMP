@@ -6,13 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import pt.up.fe.comp.TestUtils;
-import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp.jmm.parser.JmmParserResult;
-import pt.up.fe.comp2023.Analysis.MyJmmAnalysis;
-import pt.up.fe.comp2023.Jasmin.JasminConverter;
 import pt.up.fe.comp2023.Jasmin.JmmBackend;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
