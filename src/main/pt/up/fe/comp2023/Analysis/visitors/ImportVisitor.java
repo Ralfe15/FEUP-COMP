@@ -3,6 +3,7 @@ package pt.up.fe.comp2023.Analysis.visitors;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,9 +24,8 @@ public class ImportVisitor extends AJmmVisitor<List<String>, Boolean> {
     }
 
     private Boolean visitImportDeclaration(JmmNode importDeclaration, List<String> imports) {
-        String path = importDeclaration.get("value");
-        path = path.replaceAll("^\\[|]$", "").replaceAll(", ", ".");
-        imports.add(path);
+        List<String> path = importDeclaration.getObjectAsList("value", String.class);
+        imports.addAll(path);
         return true;
     }
 }

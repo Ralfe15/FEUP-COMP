@@ -35,7 +35,7 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
 
     private Boolean visitMethodDeclaration(JmmNode methodDeclaration, Map<String, MethodInfo> methods) {
         String name = methodDeclaration.get("name");
-        Type type = new Type("", false);
+        Type type = new Type(methodDeclaration.getChildren().get(0).get("rawType"), methodDeclaration.getChildren().get(0).getKind().contains("Array"));
         List<Symbol> args = new ArrayList<>();
         List<Symbol> localVariables = new ArrayList<>();
         for (JmmNode child : methodDeclaration.getChildren()) {
@@ -49,14 +49,15 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
             } else if (child.getKind().equals("VarDeclaration")) {
                 String varName = child.get("varName");
                 String varType = child.getChildren().get(0).get("rawType");
-                boolean isArray = varType.equals("ArrayType");
+                boolean isArray = child.getChildren().get(0).getKind().contains("Array");
                 localVariables.add(new Symbol(new Type(varType, isArray), varName));
             } else if (child.getKind().equals("ReturnExpression")) {
                 // Handle return expression and check if matches function signature
             }
+
             else{
-                String retType = child.get("rawType");
-                type = new Type(retType, child.getKind().equals("IntArrayType"));
+//                String retType = child.get("rawType");
+//                type = new Type(retType, child.getKind().equals("IntArrayType"));
             }
         }
         methods.put(name, new MethodInfo(type, args, localVariables));
