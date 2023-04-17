@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import io;
 
 class CompileMethodInvocation {
@@ -16,3 +17,17 @@ class CompileMethodInvocation {
         return 0;
     }
 }
+=======
+import ioPlus;
+HelloWorld {
+.construct HelloWorld().V {
+invokespecial(this, "<init>").V;
+}
+
+.method public static main(args.array.String).V {
+invokestatic(ioPlus, "printHelloWorld").V;
+ret.V;
+}
+
+}
+>>>>>>> Ollir-Jasmin
