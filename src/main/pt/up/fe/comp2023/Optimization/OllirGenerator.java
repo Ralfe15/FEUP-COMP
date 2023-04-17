@@ -55,7 +55,6 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
     }
 
     private TempVar createTemporaryVariable(JmmNode closestNode) {
-        System.out.println("tempvar");
         tempVarCounter += 1;
         String name = "t" + tempVarCounter;
         while (symbolTable.getClosestSymbol(closestNode, name).isPresent()) {
@@ -208,7 +207,9 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
             String methodName = getClosestMethod(node).get().getKind().equals("MethodDecl") ?
                     getClosestMethod(node).get().get("name") : "main";
             temp.setVariableType(symbolTable.getReturnType(methodName));
+            System.out.println(getOllirType(temp.getVariableType()));
         }
+        System.out.println(node.toTree());
         visit(node.getJmmChild(0), temp);
         startNewLine();
         ollirCode.append("ret.").append(getOllirType(temp.getVariableType())).append(" ")
@@ -264,7 +265,9 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
 
     private Boolean visitIdExpr(JmmNode node, TempVar substituteVariable) {
         substituteVariable.setValue(node.get("value"));
-        substituteVariable.setVariableType(new Type("int", node.getChildren().size()!=0));
+        boolean isArray = node.getChildren().size()!=0;
+        if (substituteVariable.getVariableType() != null) {isArray|=substituteVariable.getVariableType().isArray();}
+        substituteVariable.setVariableType(new Type("int", isArray));
         return true;
     }
 

@@ -50,7 +50,7 @@ public class Launcher {
 
         // Analysis stage
         JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
-        analysisResult.getSymbolTable().print();
+        System.out.println(analysisResult.getSymbolTable().print());
 
         // Optimization stage
         MyJmmOptimizer optimizer = new MyJmmOptimizer();

@@ -42,9 +42,11 @@ argument
 
 type
     : rawType='int' '[' ']' #IntArrayType
-    | rawType='boolean' #BoolType
     | rawType='int' #IntType
+    | rawType='boolean' #BoolType
+    | rawType='boolean' '[' ']' #BoolArrayType
     | rawType=ID #IdType
+    | rawType=ID '[' ']' #IdArrayType
     ;
 
 statement
