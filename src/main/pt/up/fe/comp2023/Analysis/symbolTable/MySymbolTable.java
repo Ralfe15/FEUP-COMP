@@ -59,12 +59,18 @@ public class MySymbolTable implements SymbolTable {
 
     @Override
     public Type getReturnType(String s) {
-        return methods.get(s).getRetType();
+        if(methods.containsKey(s)) {
+            return methods.get(s).getRetType();
+        }
+        return null;
     }
 
     @Override
     public List<Symbol> getParameters(String s) {
-        return methods.get(s).getArgs();
+        if(methods.containsKey(s)) {
+            return methods.get(s).getArgs();
+        }
+        return null;
     }
 
     @Override
@@ -102,6 +108,18 @@ public class MySymbolTable implements SymbolTable {
             }
         }
         return Optional.empty();
+    }
+
+    public boolean isLocalVariable(JmmNode node, String name) {
+        var closestSymbol = getClosestSymbol(node, name);
+        if (closestSymbol.isEmpty()) {
+            return !this.getImports().contains(name) && !name.equals("this");
+        }
+        var closestMethod = getClosestMethod(node);
+        if (closestMethod.isEmpty()){
+            return false;
+        }
+        return this.getLocalVariables(getMethodName(closestMethod.get())).stream().anyMatch(s -> s.getName().equals(name));
     }
 
     public static String getMethodName(JmmNode method) {

@@ -57,4 +57,10 @@ public class TempVar {
     public Type getAssignType() {
         return assignType;
     }
+
+    public String getInvokeString(JmmNode node, MySymbolTable symbolTable) {
+        String invokeClass = getSubstitute();
+        return symbolTable.isLocalVariable(node, invokeClass)
+                ? invokeClass + "." + getOllirType(getVariableType()) : invokeClass;
+    }
 }
