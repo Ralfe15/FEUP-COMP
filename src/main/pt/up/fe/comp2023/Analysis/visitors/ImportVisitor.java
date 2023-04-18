@@ -25,7 +25,8 @@ public class ImportVisitor extends AJmmVisitor<List<String>, Boolean> {
 
     private Boolean visitImportDeclaration(JmmNode importDeclaration, List<String> imports) {
         List<String> path = importDeclaration.getObjectAsList("value", String.class);
-        imports.addAll(path);
+        String result = String.join(".", path);
+        imports.add(result);
         return true;
     }
 }

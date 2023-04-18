@@ -78,7 +78,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
 
     private void handleImports() {
         for (var imp : symbolTable.getImports()) {
-            ollirCode.append("import ").append(imp).append(";");
+            ollirCode.append("import ").append(imp).append(";").append("\n");
         }
     }
 
@@ -129,9 +129,10 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
     }
 
     private Boolean visitFieldDeclaration(JmmNode node, TempVar dummy) {
+        System.out.println("afafeaf");
         String varName = node.get("varName");
         String varType = node.getChildren().get(0).get("rawType");
-        boolean isArray = node.getKind().equals("IntArrayType");
+        boolean isArray = node.getChildren().get(0).getKind().contains("Array");
         Type type = new Type(varType, isArray);
         ollirCode.append(varName).append(".").append(getOllirType(type));
         ollirCode.append(";");
@@ -193,10 +194,11 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         boolean returned = false;
         int currentTemporaryVariableCounter = tempVarCounter;
         for (var child : node.getChildren()) {
-            if (child.getKind().equals("Return")) { // TODO: Add visit return expression
+            if (child.getKind().equals("ReturnExpression")) { // TODO: Add visit return expression
                 visit(child);
                 returned = true;
-            } else if (child.getKind().equals("MethodBody")) { // TODO: Add visit to method body stuff
+            } else { // TODO: Add visit to method body stuff
+                System.out.println(child.getKind());
                 visit(child);
             }
         }
