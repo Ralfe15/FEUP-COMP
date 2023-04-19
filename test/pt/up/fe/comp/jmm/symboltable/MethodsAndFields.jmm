@@ -5,7 +5,7 @@ class MethodsAndFields{
 	MethodsAndFields field3;
 	
 	public int getField1(){
-		return field1;
+		return field4;
 	}
 	
 	public boolean getField2(){

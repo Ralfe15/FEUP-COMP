@@ -8,8 +8,7 @@ import java.util.Map;
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
-import pt.up.fe.comp2023.Analysis.MyJmmAnalysis;
-import pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable;
+import pt.up.fe.comp2023.Analysis.semanticAnalysis.MyJmmAnalysis;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -52,6 +51,9 @@ public class Launcher {
 
         // Analysis stage
         JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
+        // Check if there are parsing errors
+        TestUtils.noErrors(analysisResult.getReports());
+
         System.out.println(analysisResult.getSymbolTable().print());
 
         // ... add remaining stages
