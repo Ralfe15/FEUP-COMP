@@ -136,13 +136,10 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         TempVar attributeChild = createTemporaryVariable(node);
         visit(node.getJmmChild(0), attributeChild);
         Type elementType = attributeChild.getVariableType();
-
+        String variableName = attributeChild.getVariableName();
         accessedVariable = createTemporaryVariable(node);
-        String variableName = node.getJmmChild(0).get("value");
         accessedVariable.setVariableType(elementType);
         accessedVariable.setVariableName(variableName);
-
-
 //        // Handle the length case
 //        if (node.getKind().equals("ArrayLengthExpr")) {
 //            TempVar lengthHolder = createTemporaryVariable(node);
@@ -154,17 +151,15 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
 //            return true;
 //        }
 
-
-
-
         // Visit arguments
         var arguments = new ArrayList<TempVar>();
-        for (var arg : node.getJmmChild(1).getChildren()) {
-            TempVar methodArgument = createTemporaryVariable(node);
-            visit(arg, methodArgument);
-            arguments.add(methodArgument);
+        if (node.getChildren().size() > 1) {
+            for (var arg : node.getJmmChild(1).getChildren()) {
+                TempVar methodArgument = createTemporaryVariable(node);
+                visit(arg, methodArgument);
+                arguments.add(methodArgument);
+            }
         }
-
         // Write method call
         startNewLine();
         String methodName = node.get("method");
@@ -172,23 +167,16 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         if (methodType == null) {
             methodType = accessedVariable.getAssignType();
         }
+
         String ollirMethodType = getOllirType(methodType);
         TempVar methodCallHolder = createTemporaryVariable(node);
         methodCallHolder.setVariableType(methodType);
 
         boolean isVirtualCall = accessedVariable.getValue().equals("this") || symbolTable.isLocalVariable(node, accessedVariable.getSubstitute());
 
-        TempVar targetHolder = isVirtualCall ? createTemporaryVariable(node) : accessedVariable;
-//        if (isVirtualCall) {
-//            targetHolder.setVariableType(accessedVariable.getVariableType());
-//            ollirCode.append(createTemporaryAssign(targetHolder, accessedVariable.getSubstituteWithType()));
-//            targetHolder.setVariableType(accessedVariable.getVariableType());
-//            startNewLine();
-//        }
-
         methodCallHolder.setVariableType(methodType);
         ollirCode.append(createTemporaryAssign(methodCallHolder,
-                invoke(isVirtualCall ? "invokevirtual" : "invokestatic", targetHolder.getInvokeString(node.getJmmChild(0), symbolTable),
+                invoke(isVirtualCall ? "invokevirtual" : "invokestatic", accessedVariable.getInvokeString(node.getJmmChild(0), symbolTable),
                         node.get("method"),
                         arguments.stream().map(TempVar::getSubstituteWithType).collect(Collectors.toList()), ollirMethodType)));
 
@@ -315,8 +303,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
                         .append(" ").append(t2.getSubstituteWithType()).append(";");
             }
             return true;
-        }
-        else  {
+        } else {
             Type operationType = !operation.equals("<") ? t1.getVariableType() : new Type("boolean", false);
             String tempType = getOllirType(operationType);
             String code = t1.getSubstituteWithType() + " " + operation + "." + tempType + " " + t2.getSubstituteWithType();
