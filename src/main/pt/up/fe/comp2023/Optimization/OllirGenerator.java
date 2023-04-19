@@ -43,6 +43,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         addVisit("IdExpr", this::visitIdExpr);
         addVisit("ExprStmt", this::visitExpression);
         addVisit("ReturnExpression", this::visitReturn);
+        addVisit("NewObjectExpr", this::visitNewObject);
 //        addVisit("MethodCallExpr", this::visitMethodCall);
 
         addVisit("MultDivExpr", this::visitBinOp);
@@ -140,7 +141,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
     }
 
     private Boolean visitExpression(JmmNode node, TempVar dummy) {
-        visit(node.getJmmChild(0));
+        visit(node.getJmmChild(0), dummy);
         return true;
     }
 
@@ -260,8 +261,24 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         }
     }
 
+    private Boolean visitNewObject(JmmNode node, TempVar substituteVariable) {
+        if (substituteVariable == null) {
+            substituteVariable = createTemporaryVariable(node);
 
+        }
+        startNewLine();
+        String className = node.get("object");
+        substituteVariable.setVariableType(new Type(className, false));
+        ollirCode.append(createTemporaryAssign(substituteVariable,
+                "new(" + className + ")." + className));
 
+        startNewLine();
+        ollirCode.append(invoke("invokespecial", substituteVariable.getSubstituteWithType(),
+                "<init>", new ArrayList<>(), "V")).append(";");
+
+        substituteVariable.setVariableType(new Type(className, false));
+        return true;
+    }
 
     private Boolean visitIntLiteral(JmmNode node, TempVar substituteVariable) {
         substituteVariable.setValue(node.get("value"));
