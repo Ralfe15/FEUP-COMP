@@ -38,7 +38,6 @@ public class Launcher {
         // Read contents of input file
         String code = SpecsIo.read(inputFile);
 
-        /*
         // Instantiate JmmParser
         SimpleParser parser = new SimpleParser();
 
@@ -58,22 +57,22 @@ public class Launcher {
         // Optimization stage
         MyJmmOptimizer optimizer = new MyJmmOptimizer();
         OllirResult ollirResult = optimizer.toOllir(analysisResult);
-
-         */
+        /*
 
 
         // ... add remaining stages
         // ---------- OLLIR -> JASMIN -------------
 
         OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
-        /*
+
         JasminConverter jasminConverter = new JasminConverter();
         JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
-         */
+
         JmmBackend jasminConverter = new JmmBackend();
         JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
 
         System.out.println(jasminCode);
+        */
     }
 
     private static Map<String, String> parseArgs(String[] args) {

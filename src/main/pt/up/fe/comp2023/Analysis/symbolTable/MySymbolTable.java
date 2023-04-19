@@ -116,14 +116,11 @@ public class MySymbolTable implements SymbolTable {
             return !this.getImports().contains(name) && !name.equals("this");
         }
         var closestMethod = getClosestMethod(node);
-        if (closestMethod.isEmpty()){
-            return false;
-        }
-        return this.getLocalVariables(getMethodName(closestMethod.get())).stream().anyMatch(s -> s.getName().equals(name));
+        return closestMethod.filter(jmmNode -> this.getLocalVariables(getMethodName(jmmNode)).stream().anyMatch(s -> s.getName().equals(name))).isPresent();
     }
 
     public static String getMethodName(JmmNode method) {
         return method.getKind().equals("MethodDecl") ?
-                method.getChildren().get(1).get("name") : "main";
+                method.get("name") : "main";
     }
 }

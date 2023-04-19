@@ -60,6 +60,10 @@ returnExpression
     : 'return' expression ';'
     ;
 
+params
+    : expression ( ',' expression )*
+    ;
+
 expression
     : '(' expression ')' #ParenExpr
     | expression '[' expression ']' #ArrayAccessExpr
@@ -71,11 +75,11 @@ expression
     | expression op=('&&' | '||') expression #AndOrExpr
     | expression op='=' expression #AssignmentExpr
     | expression '.' 'length' #ArrayLengthExpr
-    | expression '.' method=ID '(' ( expression ( ',' expression )* )? ')' #MethodCallExpr
+    | expression '.' method=ID '(' ( params )? ')' #MethodCallExpr
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' object=ID '(' ')' #NewObjectExpr
     | bool=( 'true' | 'false' ) #BoolExpr
     | value=ID ('[' expression ']')? #IdExpr
     | value=INTEGER #IntExpr
-    | 'this' #ThisExpr
+    | value='this' #ThisExpr
     ;
