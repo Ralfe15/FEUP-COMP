@@ -90,6 +90,52 @@ public class MySymbolTable implements SymbolTable {
     public Boolean hasSymbol(String methodName, String symbolName) {
         return methods.get(methodName).getLocalVariables().contains(symbolName) || getFields().contains(symbolName);
     }
+
+    public Symbol getLocalVar(String methodSignature, String varName) {
+        if(methods.get(methodSignature) == null) return null;
+        for (Symbol s : methods.get(methodSignature).getLocalVariables()) {
+            if (varName.equals(s.getName())) {
+                return s;
+
+            }
+        }
+
+        return null;
+    }
+    public Symbol getFieldByName(String fieldName) {
+        for (Symbol field : getFields()) {
+            if (field.getName().equals(fieldName))
+                return field;
+        }
+        return null;
+    }
+
+
+    public boolean hasImport(String identifier) {
+        for (String _import : getImports()){
+            if(_import.equals(identifier)) return true;
+        }
+        return false;
+    }
+
+    public boolean hasMethod(String identifier) {
+        for (String _method : getMethods()){
+            if(_method.equals(identifier)) return true;
+        }
+        return false;
+    }
+
+    public  Symbol getSymbolByName(String varName) {
+        // Check if the variable exists in the fields
+        for (Symbol field : getFields()) {
+            if (field.getName().equals(varName)) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+
 }
 
 

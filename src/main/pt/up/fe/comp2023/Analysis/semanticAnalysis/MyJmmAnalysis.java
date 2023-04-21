@@ -16,8 +16,11 @@ public class MyJmmAnalysis implements JmmAnalysis {
     @Override
     public JmmSemanticsResult semanticAnalysis(JmmParserResult jmmParserResult) {
         MySymbolTable symbolTable = new MySymbolTable(jmmParserResult);
-        new Analyser().start(jmmParserResult.getRootNode(),symbolTable);
+        List<Report> reports = new ArrayList<>();
+        Analyser analyser = new Analyser(symbolTable);
+        analyser.start(jmmParserResult.getRootNode(),reports);
        // new CheckValidSymbolAccess(symbolTable, reports).start(jmmParserResult.getRootNode(), String.valueOf(0));
-        return new JmmSemanticsResult(jmmParserResult, symbolTable, symbolTable.getReports());
+        reports.addAll(symbolTable.getReports());
+        return new JmmSemanticsResult(jmmParserResult, symbolTable,reports);
     }
 }

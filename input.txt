@@ -1,4 +1,3 @@
-
 class ArrayAccessOnInt {
 
     public static void main(String[] args) {
