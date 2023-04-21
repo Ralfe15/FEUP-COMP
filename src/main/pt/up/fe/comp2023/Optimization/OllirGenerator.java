@@ -364,7 +364,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
 
     private Boolean visitThis(JmmNode node, TempVar substituteVariable) {
         Type classType = new Type(symbolTable.getClassName(), false);
-        if (node.getAncestor("MethodCallExpr").isEmpty() || node.getAncestor("NewObjectExpr").isEmpty()) {
+        if (node.getAncestor("MethodCallExpr").isEmpty() && node.getAncestor("NewObjectExpr").isEmpty()) {
             substituteVariable.setValue("$0.this");
         } else {
             substituteVariable.setValue("this");
