@@ -69,13 +69,13 @@ expression
     | expression '[' expression ']' #ArrayAccessExpr
     | '!' expression #NotExpr
     | expression op=( '++' | '--' ) #PostIncrDecrExpr
+    | expression '.' 'length' #ArrayLengthExpr
+    | expression '.' method=ID '(' ( params )? ')' #MethodCallExpr
     | expression op=( '*' | '/' ) expression #MultDivExpr
     | expression op=( '+' | '-' ) expression #AddSubExpr
     | expression op=( '>' | '<' ) expression #RelExpr
     | expression op=('&&' | '||') expression #AndOrExpr
     | expression op='=' expression #AssignmentExpr
-    | expression '.' 'length' #ArrayLengthExpr
-    | expression '.' method=ID '(' ( params )? ')' #MethodCallExpr
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' object=ID '(' ')' #NewObjectExpr
     | bool=( 'true' | 'false' ) #BoolExpr
