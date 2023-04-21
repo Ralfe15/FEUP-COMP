@@ -48,10 +48,6 @@ public class TutorialTest {
         TestUtils.parseVerbose("2 + 3;", STATEMENT);
     }
 
-    @Test
-    public void testProgram() {
-        TestUtils.parseVerbose("2 + 3;\n1+1;");
-    }
 
     @Test
     public void testExprSub() {

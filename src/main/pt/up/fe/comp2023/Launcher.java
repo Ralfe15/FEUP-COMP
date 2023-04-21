@@ -2,13 +2,18 @@ package pt.up.fe.comp2023;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
+import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.Analysis.semanticAnalysis.MyJmmAnalysis;
+
+import pt.up.fe.comp2023.Optimization.MyJmmOptimizer;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;
@@ -45,10 +50,6 @@ public class Launcher {
         // Instantiate JmmAnalysis
         MyJmmAnalysis analyser = new MyJmmAnalysis();
 
-//        System.out.println(parserResult.getRootNode().toTree());
-
-//        System.out.println(parserResult.getClass().getName());
-
         // Analysis stage
         JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
         // Check if there are parsing errors
@@ -56,7 +57,25 @@ public class Launcher {
 
         System.out.println(analysisResult.getSymbolTable().print());
 
+        // Optimization stage
+        MyJmmOptimizer optimizer = new MyJmmOptimizer();
+        OllirResult ollirResult = optimizer.toOllir(analysisResult);
+        /*
+
+
         // ... add remaining stages
+        // ---------- OLLIR -> JASMIN -------------
+
+        OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
+
+        JasminConverter jasminConverter = new JasminConverter();
+        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
+
+        JmmBackend jasminConverter = new JmmBackend();
+        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
+
+        System.out.println(jasminCode);
+        */
     }
 
     private static Map<String, String> parseArgs(String[] args) {

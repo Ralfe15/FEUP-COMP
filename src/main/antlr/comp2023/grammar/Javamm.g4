@@ -29,7 +29,7 @@ varDeclaration
 
 methodDeclaration
     : ('public')? type name=ID '(' args? ')' '{' ( varDeclaration)* (statement)* returnExpression '}' #MethodDecl
-    | ('public')? 'static' 'void' 'main' '(' ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
+    | ('public')? 'static' 'void' 'main' '(' argName=ID '[' ']' ID ')' '{' (varDeclaration)* (statement)* '}' #MainMethodDecl
     ;
 
 args
@@ -42,9 +42,11 @@ argument
 
 type
     : rawType='int' '[' ']' #IntArrayType
-    | rawType='boolean' #BoolType
     | rawType='int' #IntType
+    | rawType='boolean' #BoolType
+    | rawType='boolean' '[' ']' #BoolArrayType
     | rawType=ID #IdType
+    | rawType=ID '[' ']' #IdArrayType
     ;
 
 statement
@@ -52,29 +54,32 @@ statement
     | 'if' '(' expression ')' statement 'else' statement #IfElseStmt
     | 'while' '(' expression ')' statement #WhileStmt
     | expression ';' #ExprStmt
-    | ID '=' expression ';' #AssignStmt
-    | ID '[' expression ']' '=' expression ';' #ArrayAssignStmt
     ;
 
 returnExpression
     : 'return' expression ';'
     ;
 
+params
+    : expression ( ',' expression )*
+    ;
+
 expression
-    : '!' expression #NotExpr
+    : '(' expression ')' #ParenExpr
+    | expression '[' expression ']' #ArrayAccessExpr
+    | '!' expression #NotExpr
+    | expression op=( '++' | '--' ) #PostIncrDecrExpr
     | expression op=( '*' | '/' ) expression #MultDivExpr
     | expression op=( '+' | '-' ) expression #AddSubExpr
     | expression op=( '>' | '<' ) expression #RelExpr
     | expression op=('&&' | '||') expression #AndOrExpr
-    | expression op=('+=' | '*=' | '/=' | '-=') expression #AssignmentExpr
-    | expression '[' expression ']' #ArrayAccessExpr
+    | expression op='=' expression #AssignmentExpr
     | expression '.' 'length' #ArrayLengthExpr
-    | expression '.' method=ID '(' ( expression ( ',' expression )* )? ')' #MethodCallExpr
+    | expression '.' method=ID '(' ( params )? ')' #MethodCallExpr
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' object=ID '(' ')' #NewObjectExpr
-    | '(' expression ')' #ParenExpr
     | bool=( 'true' | 'false' ) #BoolExpr
-    | value=ID #IdExpr
+    | value=ID ('[' expression ']')? #IdExpr
     | value=INTEGER #IntExpr
-    | 'this' #ThisExpr
+    | value='this' #ThisExpr
     ;
