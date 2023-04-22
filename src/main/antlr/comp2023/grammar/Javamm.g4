@@ -69,6 +69,8 @@ expression
     | expression '[' expression ']' #ArrayAccessExpr
     | '!' expression #NotExpr
     | expression op=( '++' | '--' ) #PostIncrDecrExpr
+    | expression '.' 'length' #ArrayLengthExpr
+    | expression '.' method=ID '(' ( params )? ')' #MethodCallExpr
     | expression op=( '*' | '/' ) expression #MultDivExpr
     | expression op=( '+' | '-' ) expression #AddSuAbExpr
     | expression op=( '>' | '<' ) expression #RelExpr
