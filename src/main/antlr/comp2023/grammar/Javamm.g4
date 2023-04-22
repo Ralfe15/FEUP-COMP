@@ -66,7 +66,7 @@ params
 
 expression
     : '(' expression ')' #ParenExpr
-    | expression '[' expression ']' #ArrayAccessExpr
+    | name=ID '[' expression ']' #ArrayAccessExpr
     | '!' expression #NotExpr
     | expression op=( '++' | '--' ) #PostIncrDecrExpr
     | expression '.' 'length' #ArrayLengthExpr
