@@ -12,6 +12,7 @@ import pt.up.fe.comp2023.Analysis.visitors.ClassVisitor;
 import pt.up.fe.comp2023.Analysis.visitors.ImportVisitor;
 import pt.up.fe.comp2023.Analysis.visitors.MethodVisitor;
 
+import java.util.ArrayList;
 import java.util.*;
 
 public class MySymbolTable implements SymbolTable {
@@ -23,15 +24,17 @@ public class MySymbolTable implements SymbolTable {
 
     // Methods
     Map<String, MethodInfo> methods = new HashMap<>();
-
+    List<Symbol> fields = new ArrayList<>();
     List<Report> reports = new ArrayList<>();
     public MySymbolTable(JmmParserResult jmmParserResult){
-        new ImportVisitor().start(jmmParserResult.getRootNode(), imports);
-        new ClassVisitor().start(jmmParserResult.getRootNode(), classInfo);
+        new ImportVisitor().visit(jmmParserResult.getRootNode(), imports);
+        new ClassVisitor().visit(jmmParserResult.getRootNode(), classInfo);
         MethodVisitor methodVisitor = new MethodVisitor();
         methodVisitor.visitStart(jmmParserResult.getRootNode(), methods);
 
     }
+
+
 
     @Override
     public List<String> getImports() {
@@ -129,14 +132,25 @@ public class MySymbolTable implements SymbolTable {
         return false;
     }
 
-    public  Symbol getSymbolByName(String varName) {
+    public Type getSymbolByName(String varName) {
         // Check if the variable exists in the fields
-        for (Symbol field : getFields()) {
-            if (field.getName().equals(varName)) {
-                return field;
+        for (String method : getMethods()) {
+            var a = methods.get(method);
+            var d = a.getLocalVariables();
+            int count = 0;
+            for (var ex : a.getLocalVariables()){
+                var name = ex.getName();
+                if(name.equals(varName))
+                {
+                    return methods.get(method).getLocalVariables().get(count).getType();
+
+                }
+            count++;
             }
+            count = 0;
         }
-        return null;
+
+        return new Type("UNKNOW",false);
     }
 
     public static Optional<JmmNode> getClosestMethod(JmmNode node) {

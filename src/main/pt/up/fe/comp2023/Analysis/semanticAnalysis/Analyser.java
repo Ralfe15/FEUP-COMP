@@ -26,26 +26,24 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
     @Override
     protected void buildVisitor() {
-        setDefaultVisit(this::start);
 
         addVisit("Start", this::start);
         addVisit("MethodDecl", this::visitMethodDecl);
 
         addVisit("IdExpr", this::visitIdentifier);
+        addVisit("AddSuAbExpr", this::visitBinaryOp);
         addVisit("MultDivExpr", this::visitBinaryOp);
-        addVisit("AddSubExpr", this::visitBinaryOp);
         addVisit("RelExpr", this::visitBinaryOp);
         addVisit("AndOrExpr", this::visitBinaryOp);
         addVisit("MethodHeader", this::visitMethodHeader);
-        addVisit("ClassDeclaration", this::visitArrayExpression);
-        //addVisit("Array", this::visitArray);
         addVisit("ReturnExpression", this::visitReturnStmt);
-        setDefaultVisit((node, reports) -> "");
+        this.setDefaultVisit(this::start);
+
     }
 
     private String visitMethodDecl(JmmNode jmmNode, List<Report> reports) {
         JmmNode child = jmmNode.getJmmChild(0);
-        String a= child.get("value");
+        //String a= child.get("value");
         for (JmmNode childs : jmmNode.getChildren()) {
              visit(childs, reports);
         }
@@ -53,7 +51,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
     }
 
-    public static Type getType(JmmNode jmmNode) {
+    public  Type getType(JmmNode jmmNode) {
         boolean isArray = jmmNode.getAttributes().contains("isArray") && jmmNode.get("isArray").equals("true");
         String nodeKind = jmmNode.getKind();
         Type type;
@@ -76,20 +74,32 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 JmmNode arrayNode = jmmNode.getJmmChild(0);
                 type = getType(arrayNode);
                 return new Type(type.getName(), false); // Array element type
-            case "BinaryOp":
+            case "MultDivExpr":
+            case "AddSuAbExpr":
+            case "RelExpr" :
                 JmmNode leftOperand = jmmNode.getJmmChild(0);
                 JmmNode rightOperand = jmmNode.getJmmChild(1);
-                Type leftType = getType(leftOperand);
-                Type rightType = getType(rightOperand);
+                Type leftType = symbolTable.getSymbolByName(leftOperand.get("value"));
+                Type rightType;
+                if (!(jmmNode.getJmmChild(1).getKind().equals("IntExpr"))){
+                    rightType = symbolTable.getSymbolByName(jmmNode.getJmmChild(1).get("value"));
 
+                }
+                else{
+
+                    rightType = symbolTable.getSymbolByName(rightOperand.get("value")) != null ?
+                            symbolTable.getSymbolByName(rightOperand.get("value")) : new Type("int",false);
+
+                }
                 // Determine the resulting type based on the actual operation type
                 if (leftType.getName().equals("int") && rightType.getName().equals("int")) {
                     type = new Type("int", false); // Change isArray to false
                 } else if (leftType.getName().equals("boolean") && rightType.getName().equals("boolean")) {
                     type = new Type("boolean", false); // Change isArray to false
-                } else if(leftOperand.getKind().equals("BinaryOp")) {
-                    type = new Type(rightType.getName(), false); // Change isArray to false
                 }
+                //else if(leftOperand.getKind().equals("MultDivExpr") || leftOperand.getKind().equals("AddSuAbExpr") || leftOperand.getKind().equals("RelExpr")) {
+                //    type = new Type(rightType.getName(), false); // Change isArray to false
+               // }
                 else {
                     // Handle other cases if necessary
                     type = new Type("#UNKNOWN", isArray);
@@ -103,8 +113,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     type = new Type(jmmNode.get("type"), isArray);
                     return type;
                 }
-
-                return new Type(jmmNode.get("value"), isArray);
+                return jmmNode.hasAttribute("value") ?  new Type(jmmNode.get("value"), isArray) : new Type("UNKNOWN",isArray);
         }
     }
 
@@ -117,9 +126,29 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         while(!stack.isEmpty()){
             jmmNode = stack.pop();
 
-            Type lhsType = getType(jmmNode.getJmmChild(0));
-            Type rhsType = getType(jmmNode.getJmmChild(1));
+            Type lhsType;
+            Type rhsType;
+            if (!(jmmNode.getJmmChild(0).getKind().equals("IntExpr"))){
+                lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value"));
 
+            }
+            else{
+
+                lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")) != null ?
+                        symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")) : new Type("int",false);
+
+            }
+
+            if (!(jmmNode.getJmmChild(1).getKind().equals("IntExpr"))){
+                 rhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(1).get("value"));
+
+            }
+            else{
+
+                 rhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(1).get("value")) != null ?
+                         symbolTable.getSymbolByName(jmmNode.getJmmChild(1).get("value")) : new Type("int",false);
+
+            }
             JmmNode lhsNode = jmmNode.getJmmChild(0);
             JmmNode rhsNode = jmmNode.getJmmChild(1);
 
@@ -141,15 +170,15 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
             if (lhsType.getName().equals("#UNKNOWN") || rhsType.getName().equals("#UNKNOWN")) {
                 // Get the type names from the symbol table if possible
-                if (!lhsNode.getKind().equals("BinaryOp")) {
-                    lhsType = lhsType.getName().equals("#UNKNOWN") && isVariableDeclared(lhsNode.get("value"), symbolTable)
-                            ? symbolTable.getSymbolByName(lhsNode.get("value")).getType()
+                if (!lhsNode.getKind().equals("MultDivExpr") || !lhsNode.getKind().equals("AddSuAbExpr") || !lhsNode.getKind().equals("RelExpr")) {
+                    lhsType = lhsType.getName().equals("#UNKNOWN") && isVariableDeclared(lhsNode.get("value"))
+                            ? symbolTable.getSymbolByName(lhsNode.get("value"))
                             : lhsType;
                 }
 
-                if (!rhsNode.getKind().equals("BinaryOp")) {
-                    rhsType = rhsType.getName().equals("#UNKNOWN") && isVariableDeclared(rhsNode.get("value"), symbolTable)
-                            ? symbolTable.getSymbolByName(rhsNode.get("value")).getType()
+                if (!rhsNode.getKind().equals("MultDivExpr") || !rhsNode.getKind().equals("AddSuAbExpr") || !rhsNode.getKind().equals("RelExpr")) {
+                    rhsType = rhsType.getName().equals("#UNKNOWN") && isVariableDeclared(rhsNode.get("value"))
+                            ? symbolTable.getSymbolByName(rhsNode.get("value"))
                             : rhsType;
                 }
             }
@@ -166,7 +195,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
 
             // If the current child is a BinaryOp, add it to the stack
-            if (lhsNode.getKind().equals("BinaryOp")) {
+            if (lhsNode.getKind().equals("MultDivExpr") || lhsNode.getKind().equals("AddSuAbExpr") || lhsNode.getKind().equals("RelExpr")) {
                 stack.push(lhsNode);
             } else {
                 if (Arrays.asList("+", "-", "*", "/").contains(jmmNode.get("op")) || List.of("&&").contains(jmmNode.get("op")) || List.of("<").contains(jmmNode.get("op"))) {
@@ -192,7 +221,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     }
                 }
 
-                if (!Arrays.asList("int", "void", "boolean").contains(lhsType.getName())) {
+                if (!Arrays.asList("int", "void", "boolean").contains(symbolTable.getSymbolByName(lhsType.getName()).getName())) {
                     addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
                     return "<Invalid>";
                 }
@@ -205,7 +234,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     jmmNode.put("isArray", String.valueOf(lhsType.isArray()));
                 }
 
-                if (!lhsType.equals(rhsType)) {
+                if (!symbolTable.getSymbolByName(lhsType.getName()).getName().equals(symbolTable.getSymbolByName(rhsType.getName()).getName())) {
                     addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
                     return "<Invalid>";
                 }
@@ -214,7 +243,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         return "";
     }
-    public static boolean isVariableDeclared(String varName, MySymbolTable symbolTable) {
+    public  boolean isVariableDeclared(String varName) {
         // Check if the variable exists in the fields
         for (Symbol field : symbolTable.getFields()) {
             if (field.getName().equals(varName)) {
@@ -223,21 +252,17 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         }
 
         // Check if the variable exists in the parameters or local variables of any method
-        String methodName = "#UNKNOWN";
-        var methodParameters = symbolTable.getParameters(methodName);
-        var methodLocalVars = symbolTable.getLocalVariables(methodName);
 
-        for (Symbol parameter : methodParameters) {
-            if (parameter.getName().equals(varName)) {
-                return true;
+        //= (symbolTable.getLocalVariables(methodName).isEmpty()) ? symbolTable.getLocalVariables(methodName) : null;
+        for (var method : symbolTable.getMethods()){
+            for (Symbol localVar : symbolTable.getLocalVariables(method)) {
+                if (localVar.getName().equals(varName)) {
+                    return true;
+                }
             }
+
         }
 
-        for (Symbol localVar : methodLocalVars) {
-            if (localVar.getName().equals(varName)) {
-                return true;
-            }
-        }
 
         return false;
     }
@@ -247,7 +272,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             return false;
         }
 
-        if (parent.getKind().equals("ArrayAccessExpr") || parent.getJmmParent().getKind().equals("ArrayAccessExpr")) {
+        if ( parent.getKind().equals("ArrayAccessExpr") || (jmmNode.getKind().equals("IdExpr") && !jmmNode.getChildren().isEmpty()) || parent.getJmmParent().getKind().equals("ArrayAccessExpr")) {
             return true;
         }
 
@@ -261,12 +286,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             // Do not generate a report for imported class method calls
             return "";
         }
-        if (!isVariableDeclared(identifier, symbolTable)) {
+        if (!isVariableDeclared(identifier)) {
             addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be Found.");
             return "<Invalid>";
         }
+        JmmNode parent = jmmNode.getJmmParent();
 
-        Type identifierType = symbolTable.getSymbolByName(jmmNode.get("value")).getType();
+        Type identifierType = symbolTable.getSymbolByName(identifier);
 
         if (hasArrayAccess(jmmNode) && !identifierType.isArray()) {
             addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
@@ -289,144 +315,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         return "";
     }
 
-
-    public String visitSymbolTable(JmmNode jmmNode,List<Report> reports) {
-        if (visit(jmmNode.getJmmChild(0)) == "") {
-            for (String method : symbolTable.getMethods()){
-                List<Symbol> s = symbolTable.getLocalVariables(method);
-                for (Symbol symbol: s){
-                    if (symbol != null && !symbol.getType().isArray()) {
-                        symbolTable.getReports().add(new Report(
-                                ReportType.ERROR,
-                                Stage.SEMANTIC,0,0,
-                                String.format("Tried to access a as an array but it's type is ")
-                        ));
-                    }
-
-                }
-
-            }
-
-        }
-        return "";
-    }
-
-    public String visitArray(JmmNode jmmNode,List<Report> reports) {
-        if (!symbolTable.hasSymbol(jmmNode.getKind(), jmmNode.get("int"))) {
-            symbolTable.getReports().add(new Report(
-                    ReportType.ERROR,
-                    Stage.SEMANTIC,
-                    Integer.parseInt(jmmNode.get("line")),
-                    Integer.parseInt(jmmNode.get("column")),
-                    "Variable " + jmmNode.get("int") + " wasn't found in this scope"
-            ));
-            return "";
-        }
-        return "";
-    }
-
-
-    private String visitCondition(JmmNode node, List<Report> reports) {
-
-        for (JmmNode child : node.getChildren()) {
-            String type = visit(child, reports);
-            if (!type.equals("boolean")) {
-                addSemanticErrorReport(reports, node, "Condition is not of type 'boolean'");
-                return "<Invalid>";
-            }
-        }
-        return "";
-    }
-    /**
-     * Expression Visitors
-     */
-    private String visitArrayExpression(JmmNode node, List<Report> reports){
-        //JmmMethod method = symbolTable.getParentMethodName(node);
-
-        JmmNode nodeToVisit;
-        String name;
-        Type type;
-        if (node.getJmmParent().getKind().equals("ArrayAssignStmt")) {
-            name = node.getJmmParent().getJmmChild(0).get("name");
-            nodeToVisit = node.getJmmParent().getJmmChild(0);
-            String assignedType = visit(node.getJmmParent().getJmmChild(2), reports);
-
-            List<Symbol> s = symbolTable.getLocalVariables(name);
-            if (s!= null) {
-            //    if (!symbolTable.getLocalVariables( name).getType().getName().equals(assignedType)) {
-            //        addSemanticErrorReport(reports, node, "Array can't be assigned '" + assignedType +
-             //               "' variables when its type is '" + symbolTable.getLocalVar(method.toString(), name).getType().getName() + "'.");
-            //        return "<Invalid>";
-              //  }
-            }
-
-        } else nodeToVisit = node.getJmmChild(0);
-
-        type = getType(nodeToVisit);
-
-        if (type != null) {
-            if (!type.isArray()) {
-                addSemanticErrorReport(reports, nodeToVisit, "Variable '" + type.getName() + "' cannot be indexed.");
-                return "<Invalid>";
-            }
-        }
-        for (JmmNode child : node.getChildren()) {
-            if (child.getKind().equals("Literal")) {
-                String idxType = visit(child, reports);
-
-                if (!idxType.equals("int")) {
-                    addSemanticErrorReport(reports, node, "Array indexes must be of type int.");
-                    return "<Invalid>";
-                }
-            } else if (!child.equals(node.getJmmChild(0))) {
-                String idx = "int";
-                if (!idx.equals("int")){
-                    addSemanticErrorReport(reports, node,
-                            "Array indexes must be of type ints.");
-                    return "<Invalid>";
-                }
-
-            } else {
-                Type childType = getType(child);
-                String idxType;
-                if (childType == null) {
-                    idxType = visit(child, reports);
-                } else idxType = childType.getName();
-                if (!idxType.equals("int")) {
-                    addSemanticErrorReport(reports, node, "Array indexes must be of type int.");
-                    return "<Invalid>";
-                }
-            }
-        }
-        if (type != null)
-            return type.getName();
-        return "";
-    }
-/**
-    private Type getType(JmmNode node) {
-        Type type = null;
-
-        if (node.getAncestor("MethodDeclaration").isPresent()) {
-            if (node.getAncestor("MethodDeclaration").get().getJmmParent().getKind().equals("MainMethod")) {
-                List<String> a = symbolTable.getMethods();
-
-            }
-
-            //return getMethodByName(methodBody.get().getJmmParent().getJmmChild(0).getJmmChild(1).get("name"));
-        }
-
-        List<String> method = symbolTable.getMethods();
-        if (node.getAttributes().contains("name")) {
-            String varName = node.get("name");
-            if (symbolTable.getLocalVar(method.toString(), varName) != null)
-                type = symbolTable.getLocalVar(method.toString(), varName).getType();
-            else if (symbolTable.getFieldByName(varName) != null)
-                type = symbolTable.getFieldByName(varName).getType();
-        }
-
-        return type;
-    }
-**/
     private String visitReturnStmt(JmmNode jmmNode, List<Report> reports) {
 
         String methodName = "#UNKNOWN";
@@ -436,7 +324,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         // Get the return expression type
         JmmNode returnExpression = jmmNode.getChildren().get(0);
-        if (returnExpression.getKind().equals("BinaryOp")) {
+        if (returnExpression.getKind().equals("MultDivExpr") || returnExpression.getKind().equals("AddSuAbExpr") || returnExpression.getKind().equals("RelExpr") ) {
              visit(returnExpression, reports);
             //reports.addAll(childReports);
         }
@@ -455,18 +343,25 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         if (!expressionType.equals(methodReturnType)) {
             // If the expression is a method call on an imported class, assume it's valid
             if (returnExpression.getKind().equals("MethodCallExpr")) {
-                JmmNode methodCallTarget = returnExpression.getChildren().get(0);
+                JmmNode methodCallTarget;
+                String variableName;
+                if(returnExpression.getChildren().isEmpty()){
+                    variableName = returnExpression.get("value");
+                }
+                else{
+                     methodCallTarget = returnExpression.getChildren().get(0);
+                     variableName = methodCallTarget.get("value");
+                }
 
-                String variableName = methodCallTarget.get("value");
                 Type variableType = null;
                 String className;
 
-                if (isVariableDeclared(variableName, symbolTable)) {
-                    variableType = symbolTable.getSymbolByName(variableName).getType();
-                    className = variableType.getName();
-                } else {
-                    className = methodCallTarget.get("value");
-                }
+
+                variableType = symbolTable.getSymbolByName(variableName) !=null ? symbolTable.getSymbolByName(variableName) : new Type("UNKNOWN",false) ;
+                className = variableType.getName();
+                //} else {
+                    //className = methodCallTarget.get("value");
+               // }
 
                 if (symbolTable.hasImport(className)) {
                     // Do not generate a report for imported class method calls
@@ -475,7 +370,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     addSemanticErrorReport(reports, jmmNode, "Variable '" + className + "' cannot be Found.");
                 }
             }
-            else if(returnExpression.getKind().equals("Identifier") || returnExpression.getKind().equals("ArrayAccessExpr")){
+            else if(returnExpression.getKind().equals("IdExpr") || returnExpression.getKind().equals("ArrayAccessExpr")){
                 visit(returnExpression, reports);
             }
         }

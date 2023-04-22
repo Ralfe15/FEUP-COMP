@@ -18,7 +18,7 @@ public class MyJmmAnalysis implements JmmAnalysis {
         MySymbolTable symbolTable = new MySymbolTable(jmmParserResult);
         List<Report> reports = new ArrayList<>();
         Analyser analyser = new Analyser(symbolTable);
-        analyser.start(jmmParserResult.getRootNode(),reports);
+        analyser.visit(jmmParserResult.getRootNode(),reports);
        // new CheckValidSymbolAccess(symbolTable, reports).start(jmmParserResult.getRootNode(), String.valueOf(0));
         reports.addAll(symbolTable.getReports());
         return new JmmSemanticsResult(jmmParserResult, symbolTable,reports);

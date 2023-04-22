@@ -12,6 +12,7 @@ public class ClassVisitor extends AJmmVisitor<ClassInfo, Boolean> {
     @Override
     protected void buildVisitor() {
         addVisit("Start", this::start);
+        addVisit("Program", this::visitProgram);
         addVisit("ClassDeclaration", this::visitClassDeclaration);
         addVisit("VarDeclaration", this::visitVarDeclaration);
         setDefaultVisit((node, classSignature) -> true);
@@ -21,6 +22,10 @@ public class ClassVisitor extends AJmmVisitor<ClassInfo, Boolean> {
         for (JmmNode child : startNode.getChildren()) {
             visit(child, classSignature);
         }
+        return true;
+    }
+    private Boolean visitProgram(JmmNode jmmNode, ClassInfo unused) {
+        visitAllChildren(jmmNode, unused);
         return true;
     }
 
