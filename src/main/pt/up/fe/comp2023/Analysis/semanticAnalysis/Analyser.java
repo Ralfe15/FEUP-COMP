@@ -35,10 +35,50 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("MultDivExpr", this::visitBinaryOp);
         addVisit("RelExpr", this::visitBinaryOp);
         addVisit("AndOrExpr", this::visitBinaryOp);
+        addVisit("IfElseStmt", this::visitCondition);
+        addVisit("WhileStmt", this::visitCondition);
         addVisit("MethodHeader", this::visitMethodHeader);
         addVisit("ReturnExpression", this::visitReturnStmt);
+        addVisit("MethodCallExpr", this::visitMethodCall);
+
         this.setDefaultVisit(this::start);
 
+    }
+
+    private String visitCondition(JmmNode jmmNode, List<Report> reports) {
+        for (JmmNode child : jmmNode.getChildren()) {
+            String type = visit(child, reports);
+
+            if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
+                addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
+                return "<Invalid>";
+            }
+        }
+        return "";
+
+    }
+
+    private String visitMethodCall(JmmNode jmmNode, List<Report> reports) {
+        if (! jmmNode.hasAttribute("value")){return "";}
+        String identifier = jmmNode.get("value");
+
+        Type identifierType = symbolTable.getSymbolByName(identifier);
+
+        if (hasArrayAccess(jmmNode) && !identifierType.isArray()) {
+            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
+            return "<Invalid>";
+        }
+        if(hasArrayAccess(jmmNode) && hasArrayAccess(jmmNode.getJmmParent().getJmmChild(1)))
+        {
+            String type =symbolTable.getSymbolByName(jmmNode.getJmmParent().getJmmChild(1).get("value")).getName();
+
+            if(type.equals("boolean") || type.equals("void"))
+            {
+                addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed by an "+ type );
+                return "<Invalid>";
+            }
+        }
+        return "";
     }
 
     private String visitMethodDecl(JmmNode jmmNode, List<Report> reports) {
@@ -271,8 +311,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         if (parent == null) {
             return false;
         }
-
-        if ( parent.getKind().equals("ArrayAccessExpr") || (jmmNode.getKind().equals("IdExpr") && !jmmNode.getChildren().isEmpty()) || parent.getJmmParent().getKind().equals("ArrayAccessExpr")) {
+        if(parent.getChildren().size() > 1 && jmmNode.getJmmParent().getJmmChild(1).equals(jmmNode))
+        {
+            if(symbolTable.getSymbolByName(jmmNode.get("value")).getName().equals("int"))
+            {return false;}
+        }
+        if ( (parent.getKind().equals("ArrayAccessExpr")) || (jmmNode.getKind().equals("IdExpr") && !jmmNode.getChildren().isEmpty()) || parent.getJmmParent().getKind().equals("ArrayAccessExpr")) {
             return true;
         }
 
@@ -326,7 +370,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         JmmNode returnExpression = jmmNode.getChildren().get(0);
         if (returnExpression.getKind().equals("MultDivExpr") || returnExpression.getKind().equals("AddSuAbExpr") || returnExpression.getKind().equals("RelExpr") ) {
              visit(returnExpression, reports);
-            //reports.addAll(childReports);
         }
 
         Type expressionType = getType(returnExpression);
@@ -337,7 +380,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         if (returnExpression.getKind().equals("MethodCallExpr")) {
             visit(returnExpression, reports);
-            //reports.addAll(childReports);
         }
         // Check if the return type is compatible
         if (!expressionType.equals(methodReturnType)) {
