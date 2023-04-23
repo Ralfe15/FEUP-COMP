@@ -84,7 +84,10 @@ public class MySymbolTable implements SymbolTable {
     public List<Symbol> getLocalVariables(String s) {
         return methods.get(s).getLocalVariables();
     }
-
+    public Map<String, MethodInfo> getMethodsDict()
+    {
+        return methods;
+    }
     public Symbol getSymbol(String methodName, String symbolName) {
         if (methods.get(methodName).getLocalVariables().contains(symbolName)) {
             return methods.get(methodName).getLocalVariables().get(Integer.parseInt(symbolName));
@@ -117,6 +120,24 @@ public class MySymbolTable implements SymbolTable {
         return null;
     }
 
+    public MethodInfo getMethod(String methodName){
+        for(String method : getMethodsDict().keySet())
+        {
+            if(method.equals(methodName)){
+                return  getMethodsDict().get(method);
+            }
+        }
+     return null;
+    }
+    public List<Symbol> getArgsByMethod(String methodName){
+    //get args by method
+        MethodInfo methodInfo = getMethod(methodName);
+        if ( methodInfo == null) return new ArrayList<>();
+        if (!methodInfo.getArgs().isEmpty()) {
+            return methodInfo.getArgs();
+        }
+        return new ArrayList<>();
+    }
 
     public boolean hasImport(String identifier) {
         for (String _import : getImports()){
@@ -149,8 +170,24 @@ public class MySymbolTable implements SymbolTable {
             }
             count = 0;
         }
+        for (String method : getMethods()){
+            for( var a : getArgsByMethod(method)){
+                if ( a.getName().equals(varName)){
+                    return a.getType();
+                }
+            }
+        }
 
-        return new Type("UNKNOW",false);
+            try {
+                Integer.parseInt(varName);
+            } catch(NumberFormatException e) {
+                return new Type("UNKNOW",false);
+            } catch(NullPointerException e) {
+                return new Type("UNKNOW",false);
+            }
+            // only got here if we didn't return false
+            return new Type ( "int",false);
+
     }
 
     public static Optional<JmmNode> getClosestMethod(JmmNode node) {

@@ -48,8 +48,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     private String visitCondition(JmmNode jmmNode, List<Report> reports) {
         for (JmmNode child : jmmNode.getChildren()) {
             String type = visit(child, reports);
-
-            if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
+            if (jmmNode.getKind().equals("WhileStmt") && ((child.getKind().equals("RelExpr")) || child.getKind().equals("BlockStmt")) ){
+                    continue;
+            }
+            else if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
                 addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
                 return "<Invalid>";
             }
@@ -137,9 +139,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 } else if (leftType.getName().equals("boolean") && rightType.getName().equals("boolean")) {
                     type = new Type("boolean", false); // Change isArray to false
                 }
-                //else if(leftOperand.getKind().equals("MultDivExpr") || leftOperand.getKind().equals("AddSuAbExpr") || leftOperand.getKind().equals("RelExpr")) {
-                //    type = new Type(rightType.getName(), false); // Change isArray to false
-               // }
                 else {
                     // Handle other cases if necessary
                     type = new Type("#UNKNOWN", isArray);
@@ -157,7 +156,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         }
     }
 
-
+    private String getTypeSafe(JmmNode jmmNode) {
+        if ( jmmNode.hasAttribute("value")){
+            return jmmNode.get("value");
+        }
+        else return "UNKNOWN";
+    }
     private String visitBinaryOp(JmmNode jmmNode, List<Report> reports) {
 
         Stack<JmmNode> stack = new Stack<>();
@@ -169,24 +173,24 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             Type lhsType;
             Type rhsType;
             if (!(jmmNode.getJmmChild(0).getKind().equals("IntExpr"))){
-                lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value"));
+                lhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(0)));
 
             }
             else{
 
-                lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")) != null ?
-                        symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")) : new Type("int",false);
+                lhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(0))) != null ?
+                        symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(0))) : new Type("int",false);
 
             }
 
             if (!(jmmNode.getJmmChild(1).getKind().equals("IntExpr"))){
-                 rhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(1).get("value"));
+                 rhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(1)));
 
             }
             else{
 
-                 rhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(1).get("value")) != null ?
-                         symbolTable.getSymbolByName(jmmNode.getJmmChild(1).get("value")) : new Type("int",false);
+                 rhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(1))) != null ?
+                         symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(1))) : new Type("int",false);
 
             }
             JmmNode lhsNode = jmmNode.getJmmChild(0);
@@ -240,7 +244,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             } else {
                 if (Arrays.asList("+", "-", "*", "/").contains(jmmNode.get("op")) || List.of("&&").contains(jmmNode.get("op")) || List.of("<").contains(jmmNode.get("op"))) {
                     if (lhsType.isArray()) {
-                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
+                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to " + lhsType.print() + " and " + rhsType.print() );
                         return "<Invalid>";
                     }
                 }
@@ -248,7 +252,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
                 if (Arrays.asList("+", "-", "*", "/").contains(jmmNode.get("op")) || List.of("<").contains(jmmNode.get("op"))) {
                     if (!lhsType.getName().equals("int")) {
-                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
+                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to " + lhsType.print() + " and " + rhsType.print() );
                         return "<Invalid>";
 
                     }
@@ -256,12 +260,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
                 if (List.of("&&").contains(jmmNode.get("op"))) {
                     if (!lhsType.getName().equals("boolean")) {
-                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
+                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to " + lhsType.print() + " and " + rhsType.print() );
                         return "<Invalid>";
                     }
                 }
 
-                if (!Arrays.asList("int", "void", "boolean").contains(symbolTable.getSymbolByName(lhsType.getName()).getName())) {
+                if (!Arrays.asList("int", "void", "boolean").contains(lhsType.getName())) {
                     addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
                     return "<Invalid>";
                 }
@@ -274,7 +278,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     jmmNode.put("isArray", String.valueOf(lhsType.isArray()));
                 }
 
-                if (!symbolTable.getSymbolByName(lhsType.getName()).getName().equals(symbolTable.getSymbolByName(rhsType.getName()).getName())) {
+                if (!(lhsType.getName()).equals(rhsType.getName())) {
                     addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
                     return "<Invalid>";
                 }
@@ -283,7 +287,19 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         return "";
     }
-    public  boolean isVariableDeclared(String varName) {
+
+    public  boolean isVariableDeclaredWithMethod(String varName,String parent) {
+        // Check if the variable exists in the fields
+       if ( isVariableDeclared(varName)) return  true;
+
+         for ( Symbol symbol : symbolTable.getArgsByMethod(parent)){
+            if (symbol.getName().equals(varName)){return true;}
+        }
+        //for (){}
+        return false;
+    }
+
+        public  boolean isVariableDeclared(String varName) {
         // Check if the variable exists in the fields
         for (Symbol field : symbolTable.getFields()) {
             if (field.getName().equals(varName)) {
@@ -291,9 +307,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             }
         }
 
-        // Check if the variable exists in the parameters or local variables of any method
 
-        //= (symbolTable.getLocalVariables(methodName).isEmpty()) ? symbolTable.getLocalVariables(methodName) : null;
         for (var method : symbolTable.getMethods()){
             for (Symbol localVar : symbolTable.getLocalVariables(method)) {
                 if (localVar.getName().equals(varName)) {
@@ -302,6 +316,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             }
 
         }
+        if ( symbolTable.hasImport(varName)) return true;
 
 
         return false;
@@ -387,18 +402,24 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             if (returnExpression.getKind().equals("MethodCallExpr")) {
                 JmmNode methodCallTarget;
                 String variableName;
+                String parentName;
                 if(returnExpression.getChildren().isEmpty()){
                     variableName = returnExpression.get("value");
+                    parentName = returnExpression.getJmmParent().getJmmParent().hasAttribute("name") ? returnExpression.getJmmParent().getJmmParent().get("name") : "";
+
                 }
                 else{
                      methodCallTarget = returnExpression.getChildren().get(0);
                      variableName = methodCallTarget.get("value");
+                     parentName = returnExpression.getJmmParent().getJmmParent().hasAttribute("name") ? returnExpression.getJmmParent().getJmmParent().get("name") : "";
                 }
 
                 Type variableType = null;
                 String className;
 
-
+                if(isVariableDeclaredWithMethod(variableName,parentName)){
+                    return "";
+                }
                 variableType = symbolTable.getSymbolByName(variableName) !=null ? symbolTable.getSymbolByName(variableName) : new Type("UNKNOWN",false) ;
                 className = variableType.getName();
                 //} else {
@@ -408,8 +429,11 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 if (symbolTable.hasImport(className)) {
                     // Do not generate a report for imported class method calls
                     return "";
-                } else {
-                    addSemanticErrorReport(reports, jmmNode, "Variable '" + className + "' cannot be Found.");
+                }
+
+                else {
+                    addSemanticErrorReport(reports, jmmNode, "Variable '" + variableName + "' cannot be Found.");
+                    return "";
                 }
             }
             else if(returnExpression.getKind().equals("IdExpr") || returnExpression.getKind().equals("ArrayAccessExpr")){
