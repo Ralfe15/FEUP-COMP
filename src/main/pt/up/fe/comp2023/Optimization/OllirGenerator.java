@@ -46,8 +46,6 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         addVisit("NewObjectExpr", this::visitNewObject);
         addVisit("MethodCallExpr", this::visitMethodCall);
         addVisit("ArrayLengthExpr", this::visitMethodCall);
-        addVisit("NewIntArrayExpr", this::visitNewArray);
-        addVisit("ArrayAccessExpr", this::visitArrayElement);
         addVisit("ThisExpr", this::visitThis);
 
         addVisit("MultDivExpr", this::visitBinOp);
@@ -133,70 +131,6 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         return true;
     }
 
-    private Boolean visitArrayElement(JmmNode node, TempVar substituteVariable) {
-        String variableName = node.get("name");
-        Symbol symbol;
-        if (symbolTable.getClosestSymbol(node.getJmmChild(0), variableName).isPresent()) {
-            symbol = symbolTable.getClosestSymbol(node.getJmmChild(0), variableName).get();
-        } else {
-            symbol = new Symbol(new Type("void", false), variableName);
-        }
-
-        // Visit indexation
-        TempVar positionChild = createTemporaryVariable(node);
-        visit(node.getJmmChild(0), positionChild);
-
-        // Get element type
-        substituteVariable.setVariableName(variableName);
-        Type elementType = new Type(symbol.getType().getName(), false);
-
-        // Hold indexation in variable
-        startNewLine();
-        TempVar positionTemporaryVariable = createTemporaryVariable(node);
-        positionTemporaryVariable.setVariableType(new Type("int", false));
-        ollirCode.append(createTemporaryAssign(positionTemporaryVariable, positionChild.getSubstituteWithType()));
-        var closestMethod = getClosestMethod(node);
-        boolean isClassField = symbolTable.getFields().stream().anyMatch(s -> s.getName().equals(variableName) && closestMethod.isPresent())
-                && symbolTable.getLocalVariables(getMethodName(closestMethod.get())).stream().noneMatch(s -> s.getName().equals(variableName));
-        System.out.println("GJieghjOPGSHGAPS");
-        if (isClassField) {
-            TempVar referenceHolder = createTemporaryVariable(node);
-            referenceHolder.setVariableType(symbol.getType());
-            startNewLine();
-            ollirCode.append(createTemporaryAssign(referenceHolder, getField("this", variableName, getOllirType(symbol.getType()))));
-            substituteVariable.setVariableName(referenceHolder.getVariableName() + "[" + positionTemporaryVariable.getSubstituteWithType() + "]");
-        } else {
-            substituteVariable.setVariableName(variableName + "[" + positionTemporaryVariable.getSubstituteWithType() + "]");
-        }
-        substituteVariable.setVariableType(elementType);
-
-        return true;
-    }
-
-    private Boolean visitNewArray(JmmNode node, TempVar substituteVariable) {
-        Type arrayType = new Type("int", true);
-        Type elementType = new Type("int", false);
-
-        // Visit indexation
-        TempVar positionChild = createTemporaryVariable(node);
-        visit(node.getJmmChild(0), positionChild);
-
-        // Hold indexation child in variable
-        startNewLine();
-        TempVar sizeHolder = createTemporaryVariable(node);
-        sizeHolder.setVariableType(elementType);
-        ollirCode.append(createTemporaryAssign(sizeHolder, positionChild.getSubstituteWithType()));
-
-        // Create new array
-        startNewLine();
-        substituteVariable.setVariableType(arrayType);
-        ollirCode.append(createTemporaryAssign(substituteVariable,
-                "new(array, " + sizeHolder.getSubstituteWithType() + ")." + getOllirType(arrayType)));
-        substituteVariable.setVariableType(arrayType);
-
-        return true;
-    }
-
     private Boolean visitMethodCall(JmmNode node, TempVar accessedVariable) {
 
         // Visit attribute
@@ -248,10 +182,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         TempVar methodCallHolder = createTemporaryVariable(node);
         methodCallHolder.setVariableType(methodType);
 
-
-        boolean isVirtualCall = accessedVariable.getValue().equals("this") || symbolTable.isLocalVariable(node, accessedVariable.getSubstitute());
-        System.out.println(isVirtualCall);;
-
+        boolean isVirtualCall = accessedVariable.getValue().equals("this") || symbolTable.isLocalVariable(node, attributeChild.getSubstitute());
 
         TempVar targetHolder = isVirtualCall ? createTemporaryVariable(node) : accessedVariable;
 
