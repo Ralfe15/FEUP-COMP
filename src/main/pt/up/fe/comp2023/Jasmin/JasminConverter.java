@@ -7,7 +7,7 @@ import pt.up.fe.comp.jmm.ollir.OllirResult;
 
 import java.util.Collections;
 
-public class JmmBackend implements JasminBackend {
+public class JasminConverter implements JasminBackend {
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
         StringBuilder jasminCode = new StringBuilder();
