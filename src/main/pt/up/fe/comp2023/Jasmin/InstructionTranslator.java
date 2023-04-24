@@ -207,6 +207,14 @@ public class InstructionTranslator {
                 if (elementType == ElementType.OBJECTREF || elementType == ElementType.CLASS) {
                     jasminInstruction.append(getIndentation()).append("new ").append(caller.getName()).append("\n");
                     jasminInstruction.append(getIndentation()).append("dup");
+                } else if (elementType == ElementType.ARRAYREF) {
+                    ArrayList<Element> operands = instruction.getListOfOperands();
+                    if (operands.size() < 1) {
+                        return "";
+                    }
+
+                    jasminInstruction.append(getCorrespondingLoad(operands.get(0), ancestorMethod)).append("\n");
+                    jasminInstruction.append(getIndentation()).append("newarray int");
                 }
             }
         }
@@ -282,8 +290,9 @@ public class InstructionTranslator {
         ElementType returnType = instruction.getReturnType().getTypeOfElement();
 
         switch (returnType) {
-            case BOOLEAN, INT32, OBJECTREF, CLASS, STRING -> {
+            case BOOLEAN, INT32, OBJECTREF, CLASS, STRING, ARRAYREF -> {
                 jasminInstruction.append(getCorrespondingLoad(instruction.getOperand(), ancestorMethod)).append("\n");
+
                 jasminInstruction.append(getIndentation());
                 if (returnType == ElementType.BOOLEAN || returnType == ElementType.INT32) {
                     jasminInstruction.append("ireturn");
@@ -340,6 +349,24 @@ public class InstructionTranslator {
                 case INT32:
                 case BOOLEAN:
                     return getIndentation() + "iload" + spacer + operandDescriptor.getVirtualReg();
+                case ARRAYREF:
+                    StringBuilder jasminInstruction = new StringBuilder();
+
+                    jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg());
+
+                    if (element instanceof ArrayOperand) {
+                        ArrayOperand arrayOperand = (ArrayOperand) operand;
+
+                        jasminInstruction.append("\n");
+
+                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
+                        Element index = indexes.get(0);
+
+                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod)).append("\n");
+                        jasminInstruction.append(getIndentation()).append("iaload");
+                    }
+
+                    return jasminInstruction.toString();
                 case CLASS:
                 case OBJECTREF:
                 case THIS:
@@ -382,6 +409,22 @@ public class InstructionTranslator {
                 case THIS:
                 case STRING:
                     return getIndentation() + "astore" + spacer + operandDescriptor.getVirtualReg();
+                case ARRAYREF:
+                    StringBuilder jasminInstruction = new StringBuilder();
+
+                    if (element instanceof ArrayOperand) {
+                        ArrayOperand arrayOperand = (ArrayOperand) operand;
+                        jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg()).append("\n");
+
+                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
+                        Element index = indexes.get(0);
+
+                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod)).append("\n");
+                    } else {
+                        jasminInstruction.append(getIndentation()).append("astore").append(spacer).append(operandDescriptor.getVirtualReg());
+                    }
+
+                    return jasminInstruction.toString();
                 default:
                     return "";
             }

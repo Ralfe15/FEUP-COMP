@@ -7,6 +7,7 @@ public class JasminUtils {
         ElementType elementType = type.getTypeOfElement();
 
         return switch (elementType) {
+            case ARRAYREF -> "[" + translateType(((ArrayType) type).getArrayType());
             case OBJECTREF, CLASS -> "L" + getFullClassName(ollirClass, ((ClassType) type).getName()) + ";";
             default -> translateType(elementType);
         };
