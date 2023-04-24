@@ -6,32 +6,21 @@ public class JasminUtils {
     public static String translateType(ClassUnit ollirClass, Type type) {
         ElementType elementType = type.getTypeOfElement();
 
-        switch (elementType) {
-            case ARRAYREF:
-                return "[" + translateType(((ArrayType) type).getArrayType());
-            case OBJECTREF:
-            case CLASS:
-                return "L" + getFullClassName(ollirClass, ((ClassType) type).getName()) + ";";
-            default:
-                return translateType(elementType);
-        }
+        return switch (elementType) {
+            case OBJECTREF, CLASS -> "L" + getFullClassName(ollirClass, ((ClassType) type).getName()) + ";";
+            default -> translateType(elementType);
+        };
     }
 
     private static String translateType(ElementType elementType) {
-        switch (elementType) {
-            case INT32:
-                return "I";
-            case BOOLEAN:
-                return "Z";
-            case STRING:
-                return "Ljava/lang/String;";
-            case THIS:
-                return "this";
-            case VOID:
-                return "V";
-            default:
-                return "";
-        }
+        return switch (elementType) {
+            case INT32 -> "I";
+            case BOOLEAN -> "Z";
+            case STRING -> "Ljava/lang/String;";
+            case THIS -> "this";
+            case VOID -> "V";
+            default -> "";
+        };
     }
 
     public static String getFullClassName(ClassUnit ollirClass, String className) {
@@ -50,10 +39,16 @@ public class JasminUtils {
         return className;
     }
 
-    public static String trimLiteral(String literal) {
-        if (literal.charAt(0) != '"') {
+    public static String removeQuotes(String literal) {
+        if (literal.charAt(0) != '"' || literal.charAt(0) != "'".toCharArray()[0]) {
             return literal;
         }
-        return literal.length() == 1 ? literal : literal.substring(1, literal.length() - 1);
+
+        if (literal.length() == 1) {
+            return literal;
+        }
+        else {
+            return literal.substring(1, literal.length() - 1);
+        }
     }
 }
