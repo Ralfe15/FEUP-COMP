@@ -243,12 +243,11 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
 
         // Write method call
         startNewLine();
-        String methodName = null;
+        String methodName = node.get("method");
         if (node.getAncestor("ReturnExpression").isPresent() && node.getAncestor("MethodDecl").isPresent()){
             methodName = node.getAncestor("MethodDecl").get().get("name");
         }
         Type methodType = symbolTable.getReturnType(methodName);
-        System.out.println(node.get("method") + ": " + methodType);
 
         if (methodType == null) {
             methodType = accessedVariable.getAssignType();
