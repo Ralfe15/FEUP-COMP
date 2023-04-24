@@ -34,6 +34,11 @@ public class MethodDefinitionGenerator {
                 }
             }
             instructions.append(instructionTranslator.translateInstruction(instruction, method)).append("\n");
+
+            if (instruction.getInstType() == InstructionType.CALL) {
+                if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
+                    instructions.append("\tpop\n");
+            }
         }
 
         methodDefinition.append("\t.limit stack ").append(instructionTranslator.getMaxLoadCounter()).append("\n");
