@@ -257,7 +257,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         TempVar methodCallHolder = createTemporaryVariable(node);
         methodCallHolder.setVariableType(methodType);
 
-        boolean isVirtualCall = accessedVariable.getValue().equals("this") || symbolTable.isLocalVariable(node, accessedVariable.getSubstitute());
+        boolean isVirtualCall = accessedVariable.getValue().equals("this") || symbolTable.isLocalVariable(node, attributeChild.getSubstitute());
 
 
         TempVar targetHolder = isVirtualCall ? createTemporaryVariable(node) : accessedVariable;
