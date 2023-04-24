@@ -1,40 +1,27 @@
 package pt.up.fe.comp2023.Jasmin;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.report.Report;
 
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public class JasminMethodBuilder {
+public class MethodDefinitionGenerator {
     private Method method;
-    public List<Report> reports;
 
-    public JasminMethodBuilder(List<Report> reports) {
-        this.reports = reports;
-    }
-
-    public void setMethod(Method method) {
-        this.method = method;
-    }
-
-    public String getJasminMethod() {
+    public String getMethodDefinition() {
         StringBuilder methodDefinition = new StringBuilder();
-        boolean hasReturn = false;
 
         if (method.isConstructMethod()) {
             method.setMethodName("<init>");
         }
 
-        methodDefinition.append(getHeader()).append("\n");
+        methodDefinition.append(getMethodHeader()).append("\n");
 
-        methodDefinition.append("\t.limit stack 99").append("\n"); // TODO: CP3 - set limits
-        methodDefinition.append("\t.limit locals 99").append("\n"); // TODO: CP3 - set limits
-
-        StringBuilder methodInstructions = new StringBuilder();
+        StringBuilder instructions = new StringBuilder();
 
         this.method.buildVarTable();
-        InstructionTranslator instructionTranslator = new InstructionTranslator(this.reports);
+        InstructionTranslator instructionTranslator = new InstructionTranslator();
+        boolean hasReturn = false;
 
         for (Instruction instruction: method.getInstructions()) {
             if (!hasReturn && instruction.getInstType() == InstructionType.RETURN) {
@@ -43,22 +30,16 @@ public class JasminMethodBuilder {
 
             for (Map.Entry<String, Instruction> entry: method.getLabels().entrySet()) {
                 if (entry.getValue().equals(instruction)) {
-                    methodInstructions.append(entry.getKey()).append(":").append("\n");
+                    instructions.append(entry.getKey()).append(":").append("\n");
                 }
             }
-            methodInstructions.append(instructionTranslator.translateInstruction(instruction, method)).append("\n");
-
-            if (instruction.getInstType() == InstructionType.CALL) {
-                if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
-                    methodInstructions.append("\tpop\n");
-            }
+            instructions.append(instructionTranslator.translateInstruction(instruction, method)).append("\n");
         }
 
-        if (this.reports != instructionTranslator.getReports()) {
-            this.reports = instructionTranslator.getReports();
-        }
+        methodDefinition.append("\t.limit stack ").append(instructionTranslator.getMaxLoadCounter()).append("\n");
+        methodDefinition.append("\t.limit locals ").append(this.getLocalsLimit()).append("\n");
 
-        methodDefinition.append(methodInstructions);
+        methodDefinition.append(instructions);
 
         if (!hasReturn) {
             methodDefinition.append("\t").append("return").append("\n");
@@ -69,7 +50,7 @@ public class JasminMethodBuilder {
         return methodDefinition.toString();
     }
 
-    private String getHeader() {
+    private String getMethodHeader() {
         StringBuilder methodHeader = new StringBuilder(".method ");
 
         if (method.getMethodAccessModifier().toString().equals("DEFAULT")) {
@@ -86,12 +67,12 @@ public class JasminMethodBuilder {
             methodHeader.append("static ");
         }
 
-        methodHeader.append(method.getMethodName()).append(getDescriptor());
+        methodHeader.append(method.getMethodName()).append(getMethodDescriptor());
 
         return methodHeader.toString();
     }
 
-    private String getDescriptor() {
+    public String getMethodDescriptor() {
         StringBuilder descriptor = new StringBuilder("(");
 
         for (Element parameter: method.getParams()) {
@@ -103,7 +84,15 @@ public class JasminMethodBuilder {
         return descriptor.toString();
     }
 
-    public List<Report> getReports() {
-        return this.reports;
+    public void setMethod(Method method) {
+        this.method = method;
+    }
+
+    private int getLocalsLimit() {
+        if (this.method == null) {
+            return 0;
+        }
+
+        return this.method.getVarTable().values().stream().mapToInt(Descriptor::getVirtualReg).max().orElse(0) + 1;
     }
 }

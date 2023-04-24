@@ -1,43 +1,56 @@
 package pt.up.fe.comp2023.Jasmin;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp.jmm.report.ReportType;
-import pt.up.fe.comp.jmm.report.Stage;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class InstructionTranslator {
-    public List<Report> reports;
     private int indentationLevel = 1;
     private int labelCounter = 0;
-
-    public InstructionTranslator(List<Report> reports) {
-        this.reports = reports;
-    }
+    private int loadCounter = 1;
+    private int maxLoadCounter = 1;
 
     public String translateInstruction(Instruction instruction, Method ancestorMethod) {
         InstructionType instructionType = instruction.getInstType();
         StringBuilder translatedInstruction = new StringBuilder();
+        loadCounter = 1;
 
         switch (instructionType) {
-            case CALL -> translatedInstruction.append(translateInstruction((CallInstruction) instruction, ancestorMethod));
-            case RETURN -> translatedInstruction.append(translateInstruction((ReturnInstruction) instruction, ancestorMethod));
-            case PUTFIELD -> translatedInstruction.append(translateInstruction((PutFieldInstruction) instruction, ancestorMethod));
-            case GETFIELD -> translatedInstruction.append(translateInstruction((GetFieldInstruction) instruction, ancestorMethod));
-            case ASSIGN -> translatedInstruction.append(translateInstruction((AssignInstruction) instruction, ancestorMethod));
-            case BINARYOPER -> translatedInstruction.append(translateInstruction((BinaryOpInstruction) instruction, ancestorMethod));
-            case UNARYOPER -> translatedInstruction.append(translateInstruction((UnaryOpInstruction) instruction, ancestorMethod));
-            case NOPER -> translatedInstruction.append(translateInstruction((SingleOpInstruction) instruction, ancestorMethod));
-            case GOTO -> translatedInstruction.append(translateInstruction((GotoInstruction) instruction));
-            case BRANCH -> translatedInstruction.append(translateInstruction((CondBranchInstruction) instruction, ancestorMethod));
-            default -> {
-                translatedInstruction.append("--- something went wrong ---").append("\n");
-                Report newReport = new Report(ReportType.ERROR, Stage.OTHER, -1, "The instruction " + instruction + " has an unknown type.\n");
-                this.reports.add(newReport);
-            }
+            case CALL:
+                translatedInstruction.append(translateInstruction((CallInstruction) instruction, ancestorMethod));
+                break;
+            case RETURN:
+                translatedInstruction.append(translateInstruction((ReturnInstruction) instruction, ancestorMethod));
+                break;
+            case PUTFIELD:
+                translatedInstruction.append(translateInstruction((PutFieldInstruction) instruction, ancestorMethod));
+                break;
+            case GETFIELD:
+                translatedInstruction.append(translateInstruction((GetFieldInstruction) instruction, ancestorMethod));
+                break;
+            case ASSIGN:
+                translatedInstruction.append(translateInstruction((AssignInstruction) instruction, ancestorMethod));
+                break;
+            case BINARYOPER:
+                translatedInstruction.append(translateInstruction((BinaryOpInstruction) instruction, ancestorMethod));
+                break;
+            case UNARYOPER:
+                translatedInstruction.append(translateInstruction((UnaryOpInstruction) instruction, ancestorMethod));
+                break;
+            case NOPER:
+                translatedInstruction.append(translateInstruction((SingleOpInstruction) instruction, ancestorMethod));
+                break;
+            case GOTO:
+                translatedInstruction.append(translateInstruction((GotoInstruction) instruction));
+                break;
+            case BRANCH:
+                translatedInstruction.append(translateInstruction((CondBranchInstruction) instruction, ancestorMethod));
+                break;
+            default:
+                break;
         }
+
+        this.maxLoadCounter = Integer.max(this.maxLoadCounter, this.loadCounter);
 
         return translatedInstruction.toString();
     }
@@ -154,15 +167,19 @@ public class InstructionTranslator {
         CallType callType = instruction.getInvocationType();
 
         switch (callType) {
-            case invokestatic, invokevirtual -> {
+            case invokestatic:
+            case invokevirtual:
                 if (callType == CallType.invokevirtual) {
                     jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
                 }
+
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
                     parametersDescriptor.append(JasminUtils.translateType(ancestorMethod.getOllirClass(), element.getType()));
                 }
+
                 jasminInstruction.append(getIndentation());
+
                 if (callType == CallType.invokestatic) {
                     jasminInstruction.append("invokestatic ").append(caller.getName());
                 } else {
@@ -171,22 +188,30 @@ public class InstructionTranslator {
                     ClassType classType = (ClassType) instruction.getFirstArg().getType();
                     jasminInstruction.append(JasminUtils.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
                 }
-                jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
+
+
+                jasminInstruction.append(".").append(JasminUtils.trimLiteral(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
+
+
                 jasminInstruction.append(")").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
-            }
-            case invokespecial -> {
+                break;
+            case invokespecial:
                 if (ancestorMethod.isConstructMethod()) {
                     if (caller.getName().equals("this")) {
                         jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
                     }
                 }
+
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
                     parametersDescriptor.append(JasminUtils.translateType(ancestorMethod.getOllirClass(), element.getType()));
                 }
+
                 jasminInstruction.append(getIndentation());
+
                 jasminInstruction.append("invokespecial ");
+
                 if (ancestorMethod.isConstructMethod()) {
                     if (caller.getName().equals("this")) {
                         jasminInstruction.append(ancestorMethod.getOllirClass().getSuperClass());
@@ -195,14 +220,19 @@ public class InstructionTranslator {
                     ClassType classType = (ClassType) instruction.getFirstArg().getType();
                     jasminInstruction.append(JasminUtils.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
                 }
-                jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
+
+
+                jasminInstruction.append(".").append(JasminUtils.trimLiteral(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
+
+
                 jasminInstruction.append(")").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
+
                 if (!ancestorMethod.isConstructMethod()) {
                     jasminInstruction.append("\n").append(getCorrespondingStore(instruction.getFirstArg(), ancestorMethod));
                 }
-            }
-            case NEW -> {
+                break;
+            case NEW:
                 ElementType elementType = caller.getType().getTypeOfElement();
                 if (elementType == ElementType.OBJECTREF || elementType == ElementType.CLASS) {
                     jasminInstruction.append(getIndentation()).append("new ").append(caller.getName()).append("\n");
@@ -216,7 +246,11 @@ public class InstructionTranslator {
                     jasminInstruction.append(getCorrespondingLoad(operands.get(0), ancestorMethod)).append("\n");
                     jasminInstruction.append(getIndentation()).append("newarray int");
                 }
-            }
+                break;
+            case arraylength:
+                jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
+                jasminInstruction.append(getIndentation()).append("arraylength");
+                break;
         }
         return jasminInstruction.toString();
     }
@@ -229,10 +263,20 @@ public class InstructionTranslator {
         StringBuilder jasminInstruction = new StringBuilder();
 
         switch (operationType) {
-            case ADD, SUB, MUL, DIV, LTH, AND, ANDB, OR, ORB, EQ -> {
+            case ADD:
+            case SUB:
+            case MUL:
+            case DIV:
+            case LTH:
+            case AND:
+            case ANDB:
+            case OR:
+            case ORB:
+            case EQ:
                 String operationString;
                 String loads = getCorrespondingLoad(first, ancestorMethod) + "\n"
                         + getCorrespondingLoad(second, ancestorMethod) + "\n";
+
                 if (operationType == OperationType.ADD) {
                     if (!first.isLiteral() && second.isLiteral()) {
                         return getIinc(ancestorMethod, (LiteralElement) second, (Operand) first, jasminInstruction);
@@ -252,7 +296,7 @@ public class InstructionTranslator {
                         if (second.isLiteral()) {
                             LiteralElement literalElement = (LiteralElement) second;
 
-                            int literal = Integer.parseInt(JasminUtils.removeQuotes(literalElement.getLiteral()));
+                            int literal = Integer.parseInt(JasminUtils.trimLiteral(literalElement.getLiteral()));
                             if (literal == 0) {
                                 return getCorrespondingLoad(first, ancestorMethod) + "\n" + getIndentation() + this.getIfBody("iflt");
                             } else {
@@ -271,8 +315,8 @@ public class InstructionTranslator {
                 } else {
                     operationString = this.getIfBody("if_icmpeq");
                 }
+
                 return loads + getIndentation() + operationString;
-            }
         }
         return "";
     }
@@ -281,7 +325,7 @@ public class InstructionTranslator {
         jasminInstruction.append("iinc ").append(this.getVirtualReg(operand, ancestorMethod));
         jasminInstruction.append(" ");
 
-        jasminInstruction.append(JasminUtils.removeQuotes(literalElement.getLiteral()));
+        jasminInstruction.append(JasminUtils.trimLiteral(literalElement.getLiteral()));
         return getIndentation() + jasminInstruction + "\n" + getCorrespondingLoad(operand, ancestorMethod);
     }
 
@@ -290,7 +334,12 @@ public class InstructionTranslator {
         ElementType returnType = instruction.getReturnType().getTypeOfElement();
 
         switch (returnType) {
-            case BOOLEAN, INT32, OBJECTREF, CLASS, STRING, ARRAYREF -> {
+            case BOOLEAN:
+            case INT32:
+            case OBJECTREF:
+            case CLASS:
+            case STRING:
+            case ARRAYREF:
                 jasminInstruction.append(getCorrespondingLoad(instruction.getOperand(), ancestorMethod)).append("\n");
 
                 jasminInstruction.append(getIndentation());
@@ -299,14 +348,18 @@ public class InstructionTranslator {
                 } else {
                     jasminInstruction.append("areturn");
                 }
-            }
-            case VOID -> jasminInstruction.append(getIndentation()).append("return");
+
+                break;
+            case VOID:
+                jasminInstruction.append(getIndentation()).append("return");
+                break;
         }
 
         return jasminInstruction.toString();
     }
 
     private String getCorrespondingLoad(Element element, Method ancestorMethod) {
+        this.loadCounter += 1;
         if (element.isLiteral()) {
             LiteralElement literalElement = (LiteralElement) element;
 
@@ -314,7 +367,7 @@ public class InstructionTranslator {
                 case INT32:
                 case BOOLEAN:
                     StringBuilder jasminInstruction = new StringBuilder(getIndentation());
-                    String literal = JasminUtils.removeQuotes(literalElement.getLiteral());
+                    String literal = JasminUtils.trimLiteral(literalElement.getLiteral());
 
                     try {
                         int literalInt = Integer.parseInt(literal);
@@ -350,6 +403,7 @@ public class InstructionTranslator {
                 case BOOLEAN:
                     return getIndentation() + "iload" + spacer + operandDescriptor.getVirtualReg();
                 case ARRAYREF:
+                    loadCounter += 1;
                     StringBuilder jasminInstruction = new StringBuilder();
 
                     jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg());
@@ -371,6 +425,7 @@ public class InstructionTranslator {
                 case OBJECTREF:
                 case THIS:
                 case STRING:
+                    loadCounter += 1;
                     return getIndentation() + "aload" + spacer + operandDescriptor.getVirtualReg();
                 default:
                     return "";
@@ -460,8 +515,7 @@ public class InstructionTranslator {
         return "\t".repeat(this.indentationLevel);
     }
 
-    public List<Report> getReports() {
-        return this.reports;
+    public int getMaxLoadCounter() {
+        return maxLoadCounter;
     }
 }
-

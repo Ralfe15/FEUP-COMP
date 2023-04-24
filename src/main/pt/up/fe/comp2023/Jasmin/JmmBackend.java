@@ -3,37 +3,30 @@ package pt.up.fe.comp2023.Jasmin;
 import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
-import pt.up.fe.comp2023.Jasmin.JasminMethodBuilder;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp.jmm.report.Report;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 public class JmmBackend implements JasminBackend {
-    List<Report> reports = new ArrayList<>();
-
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
         StringBuilder jasminCode = new StringBuilder();
 
         ClassUnit ollirClass = ollirResult.getOllirClass();
-        jasminCode.append(getJasminClass(ollirClass)).append("\n");
-        jasminCode.append(getJasminSuper(ollirClass)).append("\n");
+        jasminCode.append(getClassDirective(ollirClass)).append("\n");
+        jasminCode.append(getSuperDirective(ollirClass)).append("\n");
         jasminCode.append("\n");
 
-        jasminCode.append(getJasminFields(ollirClass)).append("\n");
+        jasminCode.append(getFieldDefinitions(ollirClass)).append("\n");
 
-        jasminCode.append(getJasminMethods(ollirClass));
+        jasminCode.append(getMethodsDefinitions(ollirClass));
 
         System.out.println(jasminCode);
 
-        ArrayList<Report> reportss = new ArrayList<>();
-
-        return new JasminResult(ollirResult, jasminCode.toString(), reportss);
+        return new JasminResult(ollirResult, jasminCode.toString(), Collections.emptyList());
     }
 
-    private String getJasminClass(ClassUnit ollirClass) {
+    private String getClassDirective(ClassUnit ollirClass) {
         StringBuilder classDirective = new StringBuilder(".class ");
 
         if (ollirClass.isFinalClass()) {
@@ -50,9 +43,8 @@ public class JmmBackend implements JasminBackend {
             classDirective.append(ollirClass.getClassAccessModifier().toString()).append(" ");
         }
 
-        String ollirPackage = ollirClass.getPackage();
-        if (ollirPackage != null) {
-            classDirective.append(ollirPackage).append("/");
+        if (ollirClass.getPackage() != null) {
+            classDirective.append(ollirClass.getPackage()).append("/");
         }
 
         classDirective.append(ollirClass.getClassName());
@@ -60,58 +52,54 @@ public class JmmBackend implements JasminBackend {
         return classDirective.toString();
     }
 
-    private String getJasminSuper(ClassUnit ollirClass) {
+    private String getSuperDirective(ClassUnit ollirClass) {
         if (ollirClass.getSuperClass() == null) {
             ollirClass.setSuperClass("java/lang/Object");
         }
         return ".super " + ollirClass.getSuperClass();
     }
 
-    private String getJasminFields(ClassUnit ollirClass) {
-        StringBuilder jasminFields = new StringBuilder();
+    private String getFieldDefinitions(ClassUnit ollirClass) {
+        StringBuilder fieldDefinitions = new StringBuilder();
 
         for (Field field: ollirClass.getFields()) {
-            jasminFields.append(".field ");
+            fieldDefinitions.append(".field ");
 
             if (field.getFieldAccessModifier().toString().equals("DEFAULT")) {
-                jasminFields.append("private ");
+                fieldDefinitions.append("private ");
             } else {
-                jasminFields.append(field.getFieldAccessModifier().toString().toLowerCase()).append(" ");
+                fieldDefinitions.append(field.getFieldAccessModifier().toString().toLowerCase()).append(" ");
             }
 
             if (field.isFinalField()) {
-                jasminFields.append("final ");
+                fieldDefinitions.append("final ");
             }
 
             if (field.isStaticField()) {
-                jasminFields.append("static ");
+                fieldDefinitions.append("static ");
             }
 
-            jasminFields.append(field.getFieldName()).append(" ");
-            jasminFields.append(JasminUtils.translateType(ollirClass, field.getFieldType()));
+            fieldDefinitions.append(field.getFieldName()).append(" ");
+            fieldDefinitions.append(JasminUtils.translateType(ollirClass, field.getFieldType()));
 
-            jasminFields.append("\n");
+            fieldDefinitions.append("\n");
         }
 
-        return jasminFields.toString();
+        return fieldDefinitions.toString();
     }
 
-    private String getJasminMethods(ClassUnit ollirClass) {
-        StringBuilder jasminMethods = new StringBuilder();
-        JasminMethodBuilder methodBuilder = new JasminMethodBuilder(this.reports);
+    private String getMethodsDefinitions(ClassUnit ollirClass) {
+        StringBuilder methodDefinitions = new StringBuilder();
+        MethodDefinitionGenerator mdg = new MethodDefinitionGenerator();
 
         for(Method method: ollirClass.getMethods()) {
-            methodBuilder.setMethod(method);
+            mdg.setMethod(method);
 
-            jasminMethods.append(methodBuilder.getJasminMethod());
+            methodDefinitions.append(mdg.getMethodDefinition());
 
-            jasminMethods.append("\n");
+            methodDefinitions.append("\n");
         }
 
-        if (this.reports != methodBuilder.getReports()) {
-            this.reports = methodBuilder.getReports();
-        }
-
-        return jasminMethods.toString();
+        return methodDefinitions.toString();
     }
 }
