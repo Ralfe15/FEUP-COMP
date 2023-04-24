@@ -10,7 +10,7 @@ import pt.up.fe.comp.jmm.report.Report;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JasminMain implements JasminBackend {
+public class JmmBackend implements JasminBackend {
     List<Report> reports = new ArrayList<>();
 
     @Override
@@ -28,7 +28,9 @@ public class JasminMain implements JasminBackend {
 
         System.out.println(jasminCode);
 
-        return new JasminResult(ollirResult, jasminCode.toString(), this.reports);
+        ArrayList<Report> reportss = new ArrayList<>();
+
+        return new JasminResult(ollirResult, jasminCode.toString(), reportss);
     }
 
     private String getJasminClass(ClassUnit ollirClass) {

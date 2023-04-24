@@ -12,7 +12,7 @@ import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.Analysis.MyJmmAnalysis;
-import pt.up.fe.comp2023.Jasmin.JasminMain;
+import pt.up.fe.comp2023.Jasmin.JmmBackend;
 import pt.up.fe.comp2023.Optimization.MyJmmOptimizer;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
@@ -62,7 +62,7 @@ public class Launcher {
         // ---------- OLLIR -> JASMIN -------------
         // OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
 
-        JasminMain jasminConverter = new JasminMain();
+        JmmBackend jasminConverter = new JmmBackend();
         JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
 
         System.out.println(jasminCode);
