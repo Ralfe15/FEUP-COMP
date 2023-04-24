@@ -46,8 +46,6 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         addVisit("NewObjectExpr", this::visitNewObject);
         addVisit("MethodCallExpr", this::visitMethodCall);
         addVisit("ArrayLengthExpr", this::visitMethodCall);
-        addVisit("NewIntArrayExpr", this::visitNewArray);
-        addVisit("ArrayAccessExpr", this::visitArrayElement);
         addVisit("ThisExpr", this::visitThis);
 
         addVisit("MultDivExpr", this::visitBinOp);
@@ -132,6 +130,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         ollirCode.append("}");
         return true;
     }
+
 
     private Boolean visitArrayElement(JmmNode node, TempVar substituteVariable) {
         String variableName;
@@ -258,7 +257,6 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         String ollirMethodType = getOllirType(methodType);
         TempVar methodCallHolder = createTemporaryVariable(node);
         methodCallHolder.setVariableType(methodType);
-
 
         boolean isVirtualCall = accessedVariable.getValue().equals("this") || symbolTable.isLocalVariable(node, accessedVariable.getSubstitute());
 

@@ -16,18 +16,38 @@ public class InstructionTranslator {
         loadCounter = 1;
 
         switch (instructionType) {
-            case CALL -> translatedInstruction.append(translateInstruction((CallInstruction) instruction, ancestorMethod));
-            case RETURN -> translatedInstruction.append(translateInstruction((ReturnInstruction) instruction, ancestorMethod));
-            case PUTFIELD -> translatedInstruction.append(translateInstruction((PutFieldInstruction) instruction, ancestorMethod));
-            case GETFIELD -> translatedInstruction.append(translateInstruction((GetFieldInstruction) instruction, ancestorMethod));
-            case ASSIGN -> translatedInstruction.append(translateInstruction((AssignInstruction) instruction, ancestorMethod));
-            case BINARYOPER -> translatedInstruction.append(translateInstruction((BinaryOpInstruction) instruction, ancestorMethod));
-            case UNARYOPER -> translatedInstruction.append(translateInstruction((UnaryOpInstruction) instruction, ancestorMethod));
-            case NOPER -> translatedInstruction.append(translateInstruction((SingleOpInstruction) instruction, ancestorMethod));
-            case GOTO -> translatedInstruction.append(translateInstruction((GotoInstruction) instruction));
-            case BRANCH -> translatedInstruction.append(translateInstruction((CondBranchInstruction) instruction, ancestorMethod));
-            default -> {
-            }
+            case CALL:
+                translatedInstruction.append(translateInstruction((CallInstruction) instruction, ancestorMethod));
+                break;
+            case RETURN:
+                translatedInstruction.append(translateInstruction((ReturnInstruction) instruction, ancestorMethod));
+                break;
+            case PUTFIELD:
+                translatedInstruction.append(translateInstruction((PutFieldInstruction) instruction, ancestorMethod));
+                break;
+            case GETFIELD:
+                translatedInstruction.append(translateInstruction((GetFieldInstruction) instruction, ancestorMethod));
+                break;
+            case ASSIGN:
+                translatedInstruction.append(translateInstruction((AssignInstruction) instruction, ancestorMethod));
+                break;
+            case BINARYOPER:
+                translatedInstruction.append(translateInstruction((BinaryOpInstruction) instruction, ancestorMethod));
+                break;
+            case UNARYOPER:
+                translatedInstruction.append(translateInstruction((UnaryOpInstruction) instruction, ancestorMethod));
+                break;
+            case NOPER:
+                translatedInstruction.append(translateInstruction((SingleOpInstruction) instruction, ancestorMethod));
+                break;
+            case GOTO:
+                translatedInstruction.append(translateInstruction((GotoInstruction) instruction));
+                break;
+            case BRANCH:
+                translatedInstruction.append(translateInstruction((CondBranchInstruction) instruction, ancestorMethod));
+                break;
+            default:
+                break;
         }
 
         this.maxLoadCounter = Integer.max(this.maxLoadCounter, this.loadCounter);
@@ -243,10 +263,20 @@ public class InstructionTranslator {
         StringBuilder jasminInstruction = new StringBuilder();
 
         switch (operationType) {
-            case ADD, SUB, MUL, DIV, LTH, AND, ANDB, OR, ORB, EQ -> {
+            case ADD:
+            case SUB:
+            case MUL:
+            case DIV:
+            case LTH:
+            case AND:
+            case ANDB:
+            case OR:
+            case ORB:
+            case EQ:
                 String operationString;
                 String loads = getCorrespondingLoad(first, ancestorMethod) + "\n"
                         + getCorrespondingLoad(second, ancestorMethod) + "\n";
+
                 if (operationType == OperationType.ADD) {
                     if (!first.isLiteral() && second.isLiteral()) {
                         return getIinc(ancestorMethod, (LiteralElement) second, (Operand) first, jasminInstruction);
@@ -285,8 +315,8 @@ public class InstructionTranslator {
                 } else {
                     operationString = this.getIfBody("if_icmpeq");
                 }
+
                 return loads + getIndentation() + operationString;
-            }
         }
         return "";
     }
@@ -304,16 +334,25 @@ public class InstructionTranslator {
         ElementType returnType = instruction.getReturnType().getTypeOfElement();
 
         switch (returnType) {
-            case BOOLEAN, INT32, OBJECTREF, CLASS, STRING, ARRAYREF -> {
+            case BOOLEAN:
+            case INT32:
+            case OBJECTREF:
+            case CLASS:
+            case STRING:
+            case ARRAYREF:
                 jasminInstruction.append(getCorrespondingLoad(instruction.getOperand(), ancestorMethod)).append("\n");
+
                 jasminInstruction.append(getIndentation());
                 if (returnType == ElementType.BOOLEAN || returnType == ElementType.INT32) {
                     jasminInstruction.append("ireturn");
                 } else {
                     jasminInstruction.append("areturn");
                 }
-            }
-            case VOID -> jasminInstruction.append(getIndentation()).append("return");
+
+                break;
+            case VOID:
+                jasminInstruction.append(getIndentation()).append("return");
+                break;
         }
 
         return jasminInstruction.toString();
@@ -480,4 +519,3 @@ public class InstructionTranslator {
         return maxLoadCounter;
     }
 }
-

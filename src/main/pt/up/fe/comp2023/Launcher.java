@@ -12,7 +12,7 @@ import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.Analysis.MyJmmAnalysis;
-import pt.up.fe.comp2023.Jasmin.JmmBackend;
+import pt.up.fe.comp2023.Jasmin.JasminConverter;
 import pt.up.fe.comp2023.Optimization.MyJmmOptimizer;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
@@ -38,6 +38,7 @@ public class Launcher {
         // Read contents of input file
         String code = SpecsIo.read(inputFile);
 
+        /*
         // Instantiate JmmParser
         SimpleParser parser = new SimpleParser();
 
@@ -57,22 +58,16 @@ public class Launcher {
         // Optimization stage
         MyJmmOptimizer optimizer = new MyJmmOptimizer();
         OllirResult ollirResult = optimizer.toOllir(analysisResult);
-        /*
 
+        */
 
-        // ... add remaining stages
         // ---------- OLLIR -> JASMIN -------------
-
         OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
 
         JasminConverter jasminConverter = new JasminConverter();
         JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
 
-        JmmBackend jasminConverter = new JmmBackend();
-        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
-
         System.out.println(jasminCode);
-        */
     }
 
     private static Map<String, String> parseArgs(String[] args) {
