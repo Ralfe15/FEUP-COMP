@@ -344,6 +344,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
          for ( Symbol symbol : symbolTable.getArgsByMethod(parent)){
             if (symbol.getName().equals(varName)){return true;}
         }
+         if(varName.equals("this")){return true;}
         return false;
     }
 
