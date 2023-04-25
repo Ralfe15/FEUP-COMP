@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
 
 public class Analyser extends AJmmVisitor<List<Report>, String> {
     private MySymbolTable symbolTable;
-    List<String> variables;
-
     public Analyser(MySymbolTable symbolTable) {
         this.symbolTable = symbolTable;
     }
@@ -29,7 +27,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         addVisit("Start", this::start);
         addVisit("MethodDecl", this::visitMethodDecl);
-
         addVisit("IdExpr", this::visitIdentifier);
         addVisit("AddSuAbExpr", this::visitBinaryOp);
         addVisit("MultDivExpr", this::visitBinaryOp);
@@ -38,11 +35,42 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("IfElseStmt", this::visitCondition);
         addVisit("WhileStmt", this::visitCondition);
         addVisit("MethodHeader", this::visitMethodHeader);
-        addVisit("ReturnExpression", this::visitReturnStmt);
+        addVisit("AssignmentExpr",this::visitAssignmentExpr);
+        addVisit("ExprStmt",this::visitMethodDecl);
         addVisit("MethodCallExpr", this::visitMethodCall);
-
+        addVisit("ReturnExpression", this::visitReturnStmt);
         this.setDefaultVisit(this::start);
 
+    }
+
+    private String visitAssignmentExpr(JmmNode jmmNode, List<Report> reports) {
+        String nodeLhs = jmmNode.getJmmChild(0).getKind();
+        String nodeRhs = jmmNode.getJmmChild(1).getKind();
+        if(nodeLhs.equals("MethodCallExpr") && (nodeRhs.equals("MethodCallExpr") || nodeRhs.equals("IntExpr") || nodeRhs.equals("BoolExpr"))){
+
+            var varName = getTypeSafe(jmmNode.getJmmChild(1));
+            var varName1 = getTypeSafe(jmmNode.getJmmChild(0));
+            var varNameType = symbolTable.getSymbolByName(varName).getName();
+            var varNameType1 = symbolTable.getSymbolByName(varName1).getName();
+            if(!varNameType.equals(varNameType1)){
+                if(Arrays.asList("int", "void", "boolean").contains(varNameType) && Arrays.asList("int", "void", "boolean").contains(varNameType1)){
+                    addSemanticErrorReport(reports, jmmNode, "Variables types are different");
+                    return "<Invalid>";
+                }
+                if(Arrays.asList("int", "void", "boolean").contains(varNameType) || Arrays.asList("int", "void", "boolean").contains(varNameType1)) {return "";}
+
+                    if(symbolTable.getImports().contains(varNameType) && symbolTable.getImports().contains(varNameType)){return "";}
+                if(symbolTable.getSuper() == null || !(symbolTable.getSuper().equals(varNameType) || symbolTable.getSuper().equals(varNameType1)))
+                {
+                    addSemanticErrorReport(reports, jmmNode, "Class " +varNameType1+ " dont extend " + varNameType);
+                    return "<Invalid>";
+                }
+            }
+
+
+        }
+
+        return "";
     }
 
     private String visitCondition(JmmNode jmmNode, List<Report> reports) {
@@ -61,8 +89,30 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private String visitMethodCall(JmmNode jmmNode, List<Report> reports) {
-        if (! jmmNode.hasAttribute("value")){return "";}
-        String identifier = jmmNode.get("value");
+        String identifier;
+        if ( jmmNode.hasAttribute("value")){
+            identifier = jmmNode.get("value");}
+            else if(jmmNode.hasAttribute("method")){
+                identifier = jmmNode.get("method");
+                String variable = jmmNode.getJmmChild(0).get("value");
+                Type variableType = symbolTable.getSymbolByName(variable);
+                if ( variableType.getName().equals(symbolTable.getClassName())){
+                    if(!(symbolTable.getSuper() == null)){
+                        return "";
+                    }
+                    if ( symbolTable.getMethods().contains(identifier)){
+                        return  "";
+                    }
+                    else {
+                        addSemanticErrorReport(reports, jmmNode, "Variable '" + variable + "of Type: " +variableType.getName()+" don't have method "+ identifier);
+                        return "<Invalid>";
+                    }
+                }
+            }
+
+
+            else {
+            return "";}
 
         Type identifierType = symbolTable.getSymbolByName(identifier);
 
@@ -160,7 +210,77 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         if ( jmmNode.hasAttribute("value")){
             return jmmNode.get("value");
         }
+        if ( jmmNode.getKind().equals("ArrayAccessExpr")){
+            return jmmNode.getJmmChild(0).get("value");
+        }
         else return "UNKNOWN";
+    }
+
+
+    private Type getTypee(JmmNode node) {
+
+        if (!(node.getKind().equals("IntExpr"))){
+            return symbolTable.getSymbolByName(getTypeSafe(node));
+        }
+        else{
+            return symbolTable.getSymbolByName(getTypeSafe(node)) != null ?
+                    symbolTable.getSymbolByName(getTypeSafe(node)) : new Type("int",false);
+    }
+    }
+
+    private Type getTypeFromSymbolTable(JmmNode node, Type type) {
+        if (!type.getName().equals("#UNKNOWN")) {
+            return type;
+        } else if (isVariableDeclared(node.get("value"))) {
+            return symbolTable.getSymbolByName(node.get("value"));
+        } else {
+            return type;
+        }
+    }
+
+    private boolean isInvalidCondition(JmmNode node, Type type) {
+        return node.getJmmParent() != null && (node.getJmmParent().getKind().equals("IfStmt") || node.getJmmParent().getKind().equals("WhileStmt")) && !type.getName().equals("boolean") && !List.of("<").contains(node.get("op"));
+    }
+
+    private boolean isInvalidOperator(JmmNode node, Type lhsType, Type rhsType) {
+        if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || List.of("&&").contains(node.get("op")) || List.of("<").contains(node.get("op"))) {
+            if (lhsType.isArray()) {
+                return true;
+            }
+
+            if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || List.of("<").contains(node.get("op"))) {
+                if (!lhsType.getName().equals("int")) {
+                    return true;
+                }
+            }
+
+            if (List.of("&&").contains(node.get("op"))) {
+                if (!lhsType.getName().equals("boolean")) {
+                    return true;
+                }
+            }
+
+            if (!Arrays.asList("int", "void", "boolean").contains(lhsType.getName())) {
+                return true;
+            }
+            if ("<".contains(node.get("op"))) {
+                node.put("type",  new Type("boolean", false).getName());
+                node.put("isArray", String.valueOf( new Type("boolean", false).isArray()));
+            } else {
+                node.put("type", lhsType.getName());
+                node.put("isArray", String.valueOf(lhsType.isArray()));
+            }
+
+            if (!(lhsType.getName()).equals(rhsType.getName())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isBinaryOp(JmmNode node) {
+        return node.getKind().equals("MultDivExpr") || node.getKind().equals("AddSuAbExpr") || node.getKind().equals("RelExpr");
     }
     private String visitBinaryOp(JmmNode jmmNode, List<Report> reports) {
 
@@ -170,33 +290,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         while(!stack.isEmpty()){
             jmmNode = stack.pop();
 
-            Type lhsType;
-            Type rhsType;
-            if (!(jmmNode.getJmmChild(0).getKind().equals("IntExpr"))){
-                lhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(0)));
 
-            }
-            else{
-
-                lhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(0))) != null ?
-                        symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(0))) : new Type("int",false);
-
-            }
-
-            if (!(jmmNode.getJmmChild(1).getKind().equals("IntExpr"))){
-                 rhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(1)));
-
-            }
-            else{
-
-                 rhsType = symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(1))) != null ?
-                         symbolTable.getSymbolByName(getTypeSafe(jmmNode.getJmmChild(1))) : new Type("int",false);
-
-            }
             JmmNode lhsNode = jmmNode.getJmmChild(0);
             JmmNode rhsNode = jmmNode.getJmmChild(1);
 
-
+            Type lhsType = getTypee(lhsNode);
+            Type rhsType = getTypee(rhsNode);
             if(lhsNode.getKind().equals("ArrayAccessExpr")){
                 lhsNode = jmmNode.getJmmChild(0).getJmmChild(0);
                 if(lhsNode.getKind().equals("Identifier")){
@@ -206,81 +305,38 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             }
 
             if(rhsNode.getKind().equals("ArrayAccessExpr")){
-                rhsNode = jmmNode.getJmmChild(0).getJmmChild(0);
+                JmmNode rhsParentNode = jmmNode.getJmmChild(0);
+                if(!rhsParentNode.getChildren().isEmpty()){
+                    rhsNode = rhsParentNode.getJmmChild(0);
+                }
+                else {
+                    rhsNode = lhsNode;
+                }
                 if(rhsNode.getKind().equals("Identifier")){
                     visit(lhsNode, reports);
                 }
             }
 
-            if (lhsType.getName().equals("#UNKNOWN") || rhsType.getName().equals("#UNKNOWN")) {
-                // Get the type names from the symbol table if possible
-                if (!lhsNode.getKind().equals("MultDivExpr") || !lhsNode.getKind().equals("AddSuAbExpr") || !lhsNode.getKind().equals("RelExpr")) {
-                    lhsType = lhsType.getName().equals("#UNKNOWN") && isVariableDeclared(lhsNode.get("value"))
-                            ? symbolTable.getSymbolByName(lhsNode.get("value"))
-                            : lhsType;
-                }
 
-                if (!rhsNode.getKind().equals("MultDivExpr") || !rhsNode.getKind().equals("AddSuAbExpr") || !rhsNode.getKind().equals("RelExpr")) {
-                    rhsType = rhsType.getName().equals("#UNKNOWN") && isVariableDeclared(rhsNode.get("value"))
-                            ? symbolTable.getSymbolByName(rhsNode.get("value"))
-                            : rhsType;
-                }
+            if (lhsType.getName().equals("#UNKNOWN") || rhsType.getName().equals("#UNKNOWN")) {
+                lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get( "value"));
+                rhsType = getTypeFromSymbolTable(jmmNode.getJmmChild(1), rhsType);
             }
 
 
-
-            if (jmmNode.getJmmParent() != null && (jmmNode.getJmmParent().getKind().equals("IfStmt") || jmmNode.getJmmParent().getKind().equals("WhileStmt"))) {
-                if (!lhsType.getName().equals("boolean") && !List.of("<").contains(jmmNode.get("op"))){
-                    jmmNode.put("type", "#UNKNOWN");;
-                    addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Invalid condition type : " + rhsType.print() );
-                    return "<Invalid>";
-                }
+            if (isInvalidCondition(jmmNode, lhsType)) {
+                addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Invalid condition type : " + rhsType.print());
+                return "<INVALID>";
             }
 
 
             // If the current child is a BinaryOp, add it to the stack
-            if (lhsNode.getKind().equals("MultDivExpr") || lhsNode.getKind().equals("AddSuAbExpr") || lhsNode.getKind().equals("RelExpr")) {
+            if (isBinaryOp( lhsNode)) {
                 stack.push(lhsNode);
             } else {
-                if (Arrays.asList("+", "-", "*", "/").contains(jmmNode.get("op")) || List.of("&&").contains(jmmNode.get("op")) || List.of("<").contains(jmmNode.get("op"))) {
-                    if (lhsType.isArray()) {
-                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to " + lhsType.print() + " and " + rhsType.print() );
-                        return "<Invalid>";
-                    }
-                }
-
-
-                if (Arrays.asList("+", "-", "*", "/").contains(jmmNode.get("op")) || List.of("<").contains(jmmNode.get("op"))) {
-                    if (!lhsType.getName().equals("int")) {
-                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to " + lhsType.print() + " and " + rhsType.print() );
-                        return "<Invalid>";
-
-                    }
-                }
-
-                if (List.of("&&").contains(jmmNode.get("op"))) {
-                    if (!lhsType.getName().equals("boolean")) {
-                        addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to " + lhsType.print() + " and " + rhsType.print() );
-                        return "<Invalid>";
-                    }
-                }
-
-                if (!Arrays.asList("int", "void", "boolean").contains(lhsType.getName())) {
-                    addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
-                    return "<Invalid>";
-                }
-
-                if ("<".contains(jmmNode.get("op"))) {
-                    jmmNode.put("type",  new Type("boolean", false).getName());
-                    jmmNode.put("isArray", String.valueOf( new Type("boolean", false).isArray()));
-                } else {
-                    jmmNode.put("type", lhsType.getName());
-                    jmmNode.put("isArray", String.valueOf(lhsType.isArray()));
-                }
-
-                if (!(lhsType.getName()).equals(rhsType.getName())) {
-                    addSemanticErrorReport(reports, jmmNode, "Invalid operator" + jmmNode.get("op") + "applied to" + lhsType.print() + " and " + rhsType.print() );
-                    return "<Invalid>";
+                if (isInvalidOperator(jmmNode, lhsType, rhsType)) {
+                    addSemanticErrorReport(reports, jmmNode, "Invalid operator " + jmmNode.get("op") + " applied to " + lhsType.print() + " and " + rhsType.print());
+                    return "<INVALID>";
                 }
             }
         }
@@ -383,7 +439,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         // Get the return expression type
         JmmNode returnExpression = jmmNode.getChildren().get(0);
-        if (returnExpression.getKind().equals("MultDivExpr") || returnExpression.getKind().equals("AddSuAbExpr") || returnExpression.getKind().equals("RelExpr") ) {
+        if (isBinaryOp(returnExpression)) {
              visit(returnExpression, reports);
         }
 
@@ -422,9 +478,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 }
                 variableType = symbolTable.getSymbolByName(variableName) !=null ? symbolTable.getSymbolByName(variableName) : new Type("UNKNOWN",false) ;
                 className = variableType.getName();
-                //} else {
-                    //className = methodCallTarget.get("value");
-               // }
 
                 if (symbolTable.hasImport(className)) {
                     // Do not generate a report for imported class method calls
