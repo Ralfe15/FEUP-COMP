@@ -213,10 +213,14 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
 
     private Type getTypee(JmmNode node) {
-
+        if(node.getKind().equals("MethodCallExpr")){
+            var methodInfo = symbolTable.getMethod(node.get("method")).getRetType().getName();
+            return new Type (methodInfo,false);
+        }
         if (!(node.getKind().equals("IntExpr"))){
             return symbolTable.getSymbolByName(getTypeSafe(node));
         }
+
         else{
             return symbolTable.getSymbolByName(getTypeSafe(node)) != null ?
                     symbolTable.getSymbolByName(getTypeSafe(node)) : new Type("int",false);
