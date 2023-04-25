@@ -5,7 +5,7 @@ import org.specs.comp.ollir.*;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class MethodDefinitionGenerator {
+public class JasminMethodBuilder {
     private Method method;
 
     public String getMethodDefinition() {

@@ -5,10 +5,9 @@ import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 
-
 import java.util.Collections;
 
-public class JmmBackend implements JasminBackend {
+public class JasminConverter implements JasminBackend {
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
         StringBuilder jasminCode = new StringBuilder();
@@ -91,12 +90,12 @@ public class JmmBackend implements JasminBackend {
 
     private String getMethodsDefinitions(ClassUnit ollirClass) {
         StringBuilder methodDefinitions = new StringBuilder();
-        MethodDefinitionGenerator mdg = new MethodDefinitionGenerator();
+        JasminMethodBuilder methodBuilder = new JasminMethodBuilder();
 
         for(Method method: ollirClass.getMethods()) {
-            mdg.setMethod(method);
+            methodBuilder.setMethod(method);
 
-            methodDefinitions.append(mdg.getMethodDefinition());
+            methodDefinitions.append(methodBuilder.getMethodDefinition());
 
             methodDefinitions.append("\n");
         }
