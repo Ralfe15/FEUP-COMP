@@ -88,30 +88,7 @@ public class MySymbolTable implements SymbolTable {
     {
         return methods;
     }
-    public Symbol getSymbol(String methodName, String symbolName) {
-        if (methods.get(methodName).getLocalVariables().contains(symbolName)) {
-            return methods.get(methodName).getLocalVariables().get(Integer.parseInt(symbolName));
-        }
-        if (getFields().contains(symbolName)) {
-            return getFields().get(Integer.parseInt(symbolName));
-        }
-        return null;
-    }
-    public Boolean hasSymbol(String methodName, String symbolName) {
-        return methods.get(methodName).getLocalVariables().contains(symbolName) || getFields().contains(symbolName);
-    }
 
-    public Symbol getLocalVar(String methodSignature, String varName) {
-        if(methods.get(methodSignature) == null) return null;
-        for (Symbol s : methods.get(methodSignature).getLocalVariables()) {
-            if (varName.equals(s.getName())) {
-                return s;
-
-            }
-        }
-
-        return null;
-    }
     public Symbol getFieldByName(String fieldName) {
         for (Symbol field : getFields()) {
             if (field.getName().equals(fieldName))
@@ -168,7 +145,6 @@ public class MySymbolTable implements SymbolTable {
                 }
             count++;
             }
-            count = 0;
         }
         for (String method : getMethods()){
             for( var a : getArgsByMethod(method)){

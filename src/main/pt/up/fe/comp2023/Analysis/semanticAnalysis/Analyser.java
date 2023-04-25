@@ -1,20 +1,15 @@
 package pt.up.fe.comp2023.Analysis.semanticAnalysis;
 
-import org.specs.comp.ollir.NodeType;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable;
-import pt.up.fe.comp2023.Analysis.types.ClassInfo;
-import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Type;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Analyser extends AJmmVisitor<List<Report>, String> {
     private MySymbolTable symbolTable;
