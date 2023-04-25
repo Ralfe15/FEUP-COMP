@@ -23,7 +23,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("Start", this::start);
         addVisit("MethodDecl", this::visitMethodDecl);
         addVisit("IdExpr", this::visitIdentifier);
-
+        addVisit("ThisExpr",this::visitThis);
         addVisit("AddSubExpr", this::visitBinaryOp);
         addVisit("MultDivExpr", this::visitBinaryOp);
         addVisit("RelExpr", this::visitBinaryOp);
@@ -38,6 +38,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("ReturnExpression", this::visitReturnStmt);
         this.setDefaultVisit(this::start);
 
+    }
+
+    private String visitThis(JmmNode jmmNode, List<Report> reports) {
+        return "";
     }
 
     private String visitArray(JmmNode jmmNode, List<Report> reports) {
@@ -56,7 +60,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         }
         String nodeLhs = jmmNode.getJmmChild(0).getKind();
         String nodeRhs = jmmNode.getJmmChild(1).getKind();
-        if((nodeLhs.equals("MethodCallExpr") ||nodeLhs.equals("IdExpr")) && (nodeRhs.equals("MethodCallExpr") ||( nodeLhs.equals("IdExpr") && nodeRhs.equals("IdExpr")) || nodeRhs.equals("IntExpr") || nodeRhs.equals("BoolExpr"))){
+        if(isThisInStatic(jmmNode.getJmmChild(0) )|| isThisInStatic(jmmNode.getJmmChild(1) )){
+            addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
+            return "<INVALID>";
+        }
+
+            if((nodeLhs.equals("MethodCallExpr") ||nodeLhs.equals("IdExpr")) && (nodeRhs.equals("MethodCallExpr") ||( nodeLhs.equals("IdExpr") && nodeRhs.equals("IdExpr")) || nodeRhs.equals("IntExpr") || nodeRhs.equals("BoolExpr"))){
             var varName = getTypeSafe(jmmNode.getJmmChild(1));
             var varName1 = getTypeSafe(jmmNode.getJmmChild(0));
             var varNameType = symbolTable.getSymbolByName(varName).getName();
@@ -214,8 +223,11 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
     private Type getTypee(JmmNode node) {
         if(node.getKind().equals("MethodCallExpr")){
-            var methodInfo = symbolTable.getMethod(node.get("method")).getRetType().getName();
-            return new Type (methodInfo,false);
+            if(symbolTable.getMethod(node.get("method")) != null){
+                var methodInfo = symbolTable.getMethod(node.get("method")).getRetType().getName();
+                return new Type (methodInfo,false);
+
+            }
         }
         if (!(node.getKind().equals("IntExpr"))){
             return symbolTable.getSymbolByName(getTypeSafe(node));
@@ -230,7 +242,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     private Type getTypeFromSymbolTable(JmmNode node, Type type) {
         if (!type.getName().equals("#UNKNOWN")) {
             return type;
-        } else if (isVariableDeclared(node.get("value"))) {
+        } else if (isVariableDeclaredWithMethod(node.get("value"),node.getJmmParent().get("name"))) {
             return symbolTable.getSymbolByName(node.get("value"));
         } else {
             return type;
@@ -277,7 +289,29 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         return false;
     }
+    public boolean isThisInStatic(JmmNode node){
+        if(!node.getChildren().isEmpty()){
 
+            if(node.getJmmChild(0).getKind().equals("ThisExpr")){
+                var condition = true;
+                var parent = node.getJmmParent();
+                while (condition){
+                    if(parent.getKind().equals("MainMethodDecl")){
+                        return true;
+                    }
+                    if( (parent.getKind().equals("ClassDeclaration"))){
+                        return false;
+                    }
+                    else {
+                        parent = parent.getJmmParent();
+                    }
+
+                }
+
+            }
+        }
+        return false;
+    }
     private boolean isBinaryOp(JmmNode node) {
         return node.getKind().equals("MultDivExpr") || node.getKind().equals("AddSubExpr") || node.getKind().equals("RelExpr");
     }
@@ -321,7 +355,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get( "value"));
                 rhsType = getTypeFromSymbolTable(jmmNode.getJmmChild(1), rhsType);
             }
-
+            if(isThisInStatic(lhsNode) || isThisInStatic(rhsNode)){
+                addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
+                return "<INVALID>";
+            }
 
             if (isInvalidCondition(jmmNode, lhsType)) {
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Invalid condition type : " + rhsType.print());
@@ -348,7 +385,11 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
          for ( Symbol symbol : symbolTable.getArgsByMethod(parent)){
             if (symbol.getName().equals(varName)){return true;}
         }
-         if(varName.equals("this")){return true;}
+         if(varName.equals("this"))
+         {
+
+             return false;
+         }
         return false;
     }
 
