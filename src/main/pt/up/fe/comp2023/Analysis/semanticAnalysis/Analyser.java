@@ -28,7 +28,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("Start", this::start);
         addVisit("MethodDecl", this::visitMethodDecl);
         addVisit("IdExpr", this::visitIdentifier);
-        addVisit("AddSuAbExpr", this::visitBinaryOp);
+        addVisit("AddSubExpr", this::visitBinaryOp);
         addVisit("MultDivExpr", this::visitBinaryOp);
         addVisit("RelExpr", this::visitBinaryOp);
         addVisit("AndOrExpr", this::visitBinaryOp);
@@ -47,7 +47,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         String nodeLhs = jmmNode.getJmmChild(0).getKind();
         String nodeRhs = jmmNode.getJmmChild(1).getKind();
         if(nodeLhs.equals("MethodCallExpr") && (nodeRhs.equals("MethodCallExpr") || nodeRhs.equals("IntExpr") || nodeRhs.equals("BoolExpr"))){
-
             var varName = getTypeSafe(jmmNode.getJmmChild(1));
             var varName1 = getTypeSafe(jmmNode.getJmmChild(0));
             var varNameType = symbolTable.getSymbolByName(varName).getName();
@@ -134,8 +133,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private String visitMethodDecl(JmmNode jmmNode, List<Report> reports) {
-        JmmNode child = jmmNode.getJmmChild(0);
-        //String a= child.get("value");
         for (JmmNode childs : jmmNode.getChildren()) {
              visit(childs, reports);
         }
@@ -167,7 +164,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 type = getType(arrayNode);
                 return new Type(type.getName(), false); // Array element type
             case "MultDivExpr":
-            case "AddSuAbExpr":
+            case "AddSubExpr":
             case "RelExpr" :
                 JmmNode leftOperand = jmmNode.getJmmChild(0);
                 JmmNode rightOperand = jmmNode.getJmmChild(1);
@@ -280,7 +277,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private boolean isBinaryOp(JmmNode node) {
-        return node.getKind().equals("MultDivExpr") || node.getKind().equals("AddSuAbExpr") || node.getKind().equals("RelExpr");
+        return node.getKind().equals("MultDivExpr") || node.getKind().equals("AddSubExpr") || node.getKind().equals("RelExpr");
     }
     private String visitBinaryOp(JmmNode jmmNode, List<Report> reports) {
 
@@ -345,13 +342,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     public  boolean isVariableDeclaredWithMethod(String varName,String parent) {
-        // Check if the variable exists in the fields
        if ( isVariableDeclared(varName)) return  true;
-
          for ( Symbol symbol : symbolTable.getArgsByMethod(parent)){
             if (symbol.getName().equals(varName)){return true;}
         }
-        //for (){}
         return false;
     }
 
@@ -430,21 +424,27 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         return "";
     }
 
+    /**
+     * Visits a return statement node and checks if the return type is compatible with the method's return type.
+     * If not, generates a semantic error report.
+     * @param jmmNode The return statement node to be visited.
+     * @param reports The list of semantic error reports.
+     * @return An empty string.
+     */
     private String visitReturnStmt(JmmNode jmmNode, List<Report> reports) {
 
         String methodName = "#UNKNOWN";
-
-        // Get the method return type
         Type methodReturnType = symbolTable.getReturnType(methodName);
-
-        // Get the return expression type
         JmmNode returnExpression = jmmNode.getChildren().get(0);
+
+        // Check if the return expression is a binary operation
         if (isBinaryOp(returnExpression)) {
-             visit(returnExpression, reports);
+            visit(returnExpression, reports);
         }
 
         Type expressionType = getType(returnExpression);
 
+        // Check if the return expression is a method call
         if (symbolTable.hasMethod(expressionType.getName())) {
             expressionType = symbolTable.getReturnType(expressionType.getName());
         }
@@ -452,48 +452,56 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         if (returnExpression.getKind().equals("MethodCallExpr")) {
             visit(returnExpression, reports);
         }
+
         // Check if the return type is compatible
         if (!expressionType.equals(methodReturnType)) {
+
             // If the expression is a method call on an imported class, assume it's valid
             if (returnExpression.getKind().equals("MethodCallExpr")) {
                 JmmNode methodCallTarget;
                 String variableName;
                 String parentName;
+
+                // Get the variable name and parent name of the method call target
                 if(returnExpression.getChildren().isEmpty()){
                     variableName = returnExpression.get("value");
                     parentName = returnExpression.getJmmParent().getJmmParent().hasAttribute("name") ? returnExpression.getJmmParent().getJmmParent().get("name") : "";
-
                 }
                 else{
-                     methodCallTarget = returnExpression.getChildren().get(0);
-                     variableName = methodCallTarget.get("value");
-                     parentName = returnExpression.getJmmParent().getJmmParent().hasAttribute("name") ? returnExpression.getJmmParent().getJmmParent().get("name") : "";
+                    methodCallTarget = returnExpression.getChildren().get(0);
+                    variableName = methodCallTarget.get("value");
+                    parentName = returnExpression.getJmmParent().getJmmParent().hasAttribute("name") ? returnExpression.getJmmParent().getJmmParent().get("name") : "";
                 }
 
                 Type variableType = null;
                 String className;
 
+                // Check if the variable is declared with a method
                 if(isVariableDeclaredWithMethod(variableName,parentName)){
                     return "";
                 }
+
+                // Get the variable type and class name
                 variableType = symbolTable.getSymbolByName(variableName) !=null ? symbolTable.getSymbolByName(variableName) : new Type("UNKNOWN",false) ;
                 className = variableType.getName();
 
+                // If the class is imported, assume the method call is valid
                 if (symbolTable.hasImport(className)) {
-                    // Do not generate a report for imported class method calls
                     return "";
                 }
 
+                // Otherwise, generate a semantic error report
                 else {
                     addSemanticErrorReport(reports, jmmNode, "Variable '" + variableName + "' cannot be Found.");
                     return "";
                 }
             }
+
+            // If the expression is an identifier or an array access expression, visit it
             else if(returnExpression.getKind().equals("IdExpr") || returnExpression.getKind().equals("ArrayAccessExpr")){
                 visit(returnExpression, reports);
             }
         }
-
 
         return "";
     }

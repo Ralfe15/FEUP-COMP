@@ -72,7 +72,7 @@ expression
     | expression '.' 'length' #ArrayLengthExpr
     | expression '.' method=ID '(' ( params )? ')' #MethodCallExpr
     | expression op=( '*' | '/' ) expression #MultDivExpr
-    | expression op=( '+' | '-' ) expression #AddSuAbExpr
+    | expression op=( '+' | '-' ) expression #AddSubExpr
     | expression op=( '>' | '<' ) expression #RelExpr
     | expression op=('&&' | '||') expression #AndOrExpr
     | expression op='=' expression #AssignmentExpr
