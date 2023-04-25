@@ -144,7 +144,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         Type type;
 
         switch (nodeKind) {
-            case "Boolean":
+            case "BoolExpr":
                 type = new Type("boolean", isArray);
                 return type;
             case "Identifier":
@@ -550,8 +550,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     return "";
                 }
 
+
                 // Otherwise, generate a semantic error report
                 else {
+
+                    // only got here if we didn't return false
+                    if(isPrimitive(variableName))return "";
                     addSemanticErrorReport(reports, jmmNode, "Variable '" + variableName + "' cannot be Found.");
                     return "";
                 }
@@ -564,6 +568,19 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         }
         visit(returnExpression, reports);
         return "";
+    }
+    private boolean isPrimitive(String varName){
+        {
+            if(Arrays.asList("false", "true").contains(varName)) return true;
+            try {
+                Integer.parseInt(varName);
+            } catch(NumberFormatException e) {
+                return false;
+            } catch(NullPointerException e) {
+                return false;
+            }
+            return true;
+        }
     }
     private void addSemanticErrorReport(List<Report>  reports, JmmNode node, String message){
         reports.add(new Report(
