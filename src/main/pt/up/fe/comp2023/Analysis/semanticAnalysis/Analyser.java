@@ -388,7 +388,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
          if(varName.equals("this"))
          {
 
-             return false;
+             return true;
          }
         return false;
     }
