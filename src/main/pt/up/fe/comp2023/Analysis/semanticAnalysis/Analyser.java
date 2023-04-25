@@ -77,6 +77,9 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     continue;
             }
             else if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
+                if(jmmNode.getKind().equals("WhileStmt") && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean")){
+                    continue;
+                }
                 addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
                 return "<Invalid>";
             }
@@ -374,10 +377,14 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         if (parent == null) {
             return false;
         }
+
         if(parent.getChildren().size() > 1 && jmmNode.getJmmParent().getJmmChild(1).equals(jmmNode))
         {
-            if(symbolTable.getSymbolByName(jmmNode.get("value")).getName().equals("int"))
-            {return false;}
+            if(jmmNode.hasAttribute("value")){
+                if(symbolTable.getSymbolByName(jmmNode.get("value")).getName().equals("int"))
+                {return false;}
+
+            }
         }
         if ( (parent.getKind().equals("ArrayAccessExpr")) || jmmNode.getJmmParent().getKind().equals("IdExpr")  && jmmNode.getChildren().isEmpty() ||((jmmNode.getKind().equals("IdExpr")  ) && !jmmNode.getChildren().isEmpty()) || parent.getJmmParent().getKind().equals("ArrayAccessExpr")) {
             return true;
