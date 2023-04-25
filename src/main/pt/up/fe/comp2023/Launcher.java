@@ -38,7 +38,7 @@ public class Launcher {
         // Read contents of input file
         String code = SpecsIo.read(inputFile);
 
-        /*
+
         // Instantiate JmmParser
         SimpleParser parser = new SimpleParser();
 
@@ -59,10 +59,9 @@ public class Launcher {
         System.out.println(analysisResult.getSymbolTable().print());
 
         // Optimization stage
-        MyJmmOptimizer optimizer = new MyJmmOptimizer();
-        OllirResult ollirResult = optimizer.toOllir(analysisResult);
+        //MyJmmOptimizer optimizer = new MyJmmOptimizer();
+        //OllirResult ollirResult = optimizer.toOllir(analysisResult);
 
-        */
 
         // ---------- OLLIR -> JASMIN -------------
         OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
