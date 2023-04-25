@@ -77,7 +77,7 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
             if (child.getKind().equals("VarDeclaration")) {
                 String varName = child.get("varName");
                 String varType = child.getChildren().get(0).get("rawType");
-                boolean isArray = varType.equals("ArrayType");
+                boolean isArray = child.getChildren().get(0).getKind().contains("Array");
                 localVariables.add(new Symbol(new Type(varType, isArray), varName));
             }
         }

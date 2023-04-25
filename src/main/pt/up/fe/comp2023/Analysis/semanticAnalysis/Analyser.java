@@ -382,6 +382,9 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         if ( (parent.getKind().equals("ArrayAccessExpr")) || jmmNode.getJmmParent().getKind().equals("IdExpr")  && jmmNode.getChildren().isEmpty() ||((jmmNode.getKind().equals("IdExpr")  ) && !jmmNode.getChildren().isEmpty()) || parent.getJmmParent().getKind().equals("ArrayAccessExpr")) {
             return true;
         }
+        if ( symbolTable.getSymbolByName(getTypeSafe(jmmNode)).isArray()){
+            return true;
+        }
 
         return false;
     }
