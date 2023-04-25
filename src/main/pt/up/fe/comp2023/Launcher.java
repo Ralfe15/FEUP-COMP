@@ -11,7 +11,7 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
-import pt.up.fe.comp2023.Analysis.MyJmmAnalysis;
+import pt.up.fe.comp2023.Analysis.semanticAnalysis.MyJmmAnalysis;
 import pt.up.fe.comp2023.Jasmin.JasminConverter;
 import pt.up.fe.comp2023.Optimization.MyJmmOptimizer;
 import pt.up.fe.specs.util.SpecsIo;
@@ -53,6 +53,9 @@ public class Launcher {
 
         // Analysis stage
         JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
+        // Check if there are parsing errors
+        TestUtils.noErrors(analysisResult.getReports());
+
         System.out.println(analysisResult.getSymbolTable().print());
 
         // Optimization stage

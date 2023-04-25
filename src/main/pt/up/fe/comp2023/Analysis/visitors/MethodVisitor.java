@@ -52,6 +52,7 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
                 boolean isArray = child.getChildren().get(0).getKind().contains("Array");
                 localVariables.add(new Symbol(new Type(varType, isArray), varName));
             } else if (child.getKind().equals("ReturnExpression")) {
+
                 // Handle return expression and check if matches function signature
             }
 
