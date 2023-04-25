@@ -99,17 +99,43 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     continue;
             }
             else if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
-                if(jmmNode.getKind().equals("WhileStmt") && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean")){
+                if(jmmNode.getKind().equals("WhileStmt") ){
+                    if((child.hasAttribute("bool"))){
+                        if (isPrimitive(child.get("bool"))){
+                            continue;
+                        }
+                    }
+
+                    if (child.getKind().equals("AndOrExpr")){
+                        visitBinaryOp(child,reports);
+                        if(isBool(child.getJmmChild(0)) && isBool(child.getJmmChild(1)) )
+                        {
+                            continue;
+                        }
+                    }
+                    if((child.hasAttribute("value")) && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean")) {
+                        continue;
+                    }
+                        if(child.getJmmChild(0).hasAttribute("value") && symbolTable.getSymbolByName(child.getJmmChild(0).get("value")).getName().equals("boolean"))
                     continue;
                 }
-                addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
-                return "<Invalid>";
             }
         }
         return "";
 
     }
+public boolean isBool(JmmNode node){
 
+        if(node.hasAttribute("value")){
+            return symbolTable.getSymbolByName(getTypeSafe(node)).getName().equals("boolean");
+        }
+        else {
+            if (node.hasAttribute("bool") && isPrimitive(node.get("bool"))){
+                return true;
+            }
+        }
+        return false;
+}
     private String visitMethodCall(JmmNode jmmNode, List<Report> reports) {
         String identifier;
             if(isThisInStatic(jmmNode)){
@@ -164,7 +190,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 type = new Type("boolean", isArray);
                 return type;
             case "Identifier":
-                type = new Type("#UNKNOWN", isArray);
+                type = new Type("UNKNOWN", isArray);
                 return type;
             case "Integer":
                 type = new Type("int", isArray);
@@ -202,7 +228,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 }
                 else {
                     // Handle other cases if necessary
-                    type = new Type("#UNKNOWN", isArray);
+                    type = new Type("UNKNOWN", isArray);
                 }
                 return type;
             default:
@@ -236,6 +262,11 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
             }
         }
+        if(node.getKind().equals("BoolExpr")){
+            if(isBool(node)){
+                return new Type("boolean",false);
+            }
+        }
         if (!(node.getKind().equals("IntExpr"))){
             return symbolTable.getSymbolByName(getTypeSafe(node));
         }
@@ -247,7 +278,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private Type getTypeFromSymbolTable(JmmNode node, Type type) {
-        if (!type.getName().equals("#UNKNOWN")) {
+        if (!type.getName().equals("UNKNOWN")) {
             return type;
         } else if (isVariableDeclaredWithMethod(node.get("value"),node.getJmmParent().get("name"))) {
             return symbolTable.getSymbolByName(node.get("value"));
@@ -320,12 +351,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         return false;
     }
     private boolean isBinaryOp(JmmNode node) {
-        return node.getKind().equals("MultDivExpr") || node.getKind().equals("AddSubExpr") || node.getKind().equals("RelExpr");
+        return node.getKind().equals("MultDivExpr") || node.getKind().equals("AddSubExpr") || node.getKind().equals("RelExpr") ;
     }
     private String visitBinaryOp(JmmNode jmmNode, List<Report> reports) {
 
         Stack<JmmNode> stack = new Stack<>();
         stack.push(jmmNode);
+        String typeExpr = jmmNode.getJmmChild(1).getKind();
 
         while(!stack.isEmpty()){
             jmmNode = stack.pop();
@@ -358,23 +390,38 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             }
 
 
-            if (lhsType.getName().equals("#UNKNOWN") || rhsType.getName().equals("#UNKNOWN")) {
-                lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get( "value"));
-                rhsType = getTypeFromSymbolTable(jmmNode.getJmmChild(1), rhsType);
+            if (lhsType.getName().equals("UNKNOWN") || rhsType.getName().equals("UNKNOWN")) {
+                if(jmmNode.getJmmChild(0).hasAttribute("value")){
+                    lhsType = symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get( "value"));
+                    rhsType = getTypeFromSymbolTable(jmmNode.getJmmChild(1), rhsType);
+
+                }
             }
             if(isThisInStatic(lhsNode) || isThisInStatic(rhsNode)){
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
                 return "<INVALID>";
             }
+            if ( !typeExpr.equals("IntExpr")){
+                if( jmmNode.getJmmParent() != null && (jmmNode.getJmmParent().getKind().equals("IfStmt") ) && !lhsType.getName().equals("int") && !List.of("<").contains(jmmNode.get("op"))){
+                    addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Invalid condition type : " + rhsType.print());
+                    return "<INVALID>";
+                }
 
-            if (isInvalidCondition(jmmNode, lhsType)) {
+            }
+            else if  (isInvalidCondition(jmmNode, lhsType)) {
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Invalid condition type : " + rhsType.print());
                 return "<INVALID>";
             }
 
 
             // If the current child is a BinaryOp, add it to the stack
-            if (isBinaryOp( lhsNode)) {
+            if(!typeExpr.equals("IntExpr") ){
+                if(lhsNode.getKind().equals("AndOrExpr")){
+                    stack.push(lhsNode);
+
+                }
+            }
+            else if (isBinaryOp( lhsNode)) {
                 stack.push(lhsNode);
             } else {
                 if (isInvalidOperator(jmmNode, lhsType, rhsType)) {
