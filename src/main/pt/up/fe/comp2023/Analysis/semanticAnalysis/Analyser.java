@@ -420,16 +420,20 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
             return "<Invalid>";
         }
-        if(hasArrayAccess(jmmNode) && hasArrayAccess(jmmNode.getJmmChild(0)))
+        if(!jmmNode.getChildren().isEmpty())
         {
-            String type =symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")).getName();
-
-            if(type.equals("boolean") || type.equals("void"))
+            if(hasArrayAccess(jmmNode) && hasArrayAccess(jmmNode.getJmmChild(0)))
             {
-                addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed by an "+ type );
-                return "<Invalid>";
+                String type =symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")).getName();
+
+                if(type.equals("boolean") || type.equals("void"))
+                {
+                    addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed by an "+ type );
+                    return "<Invalid>";
+                }
             }
         }
+
 
 
         if (symbolTable.hasImport(identifier)) {
