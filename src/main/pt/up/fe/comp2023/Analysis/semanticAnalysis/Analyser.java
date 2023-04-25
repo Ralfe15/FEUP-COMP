@@ -23,7 +23,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("Start", this::start);
         addVisit("MethodDecl", this::visitMethodDecl);
         addVisit("IdExpr", this::visitIdentifier);
-        addVisit("ThisExpr",this::visitThis);
         addVisit("AddSubExpr", this::visitBinaryOp);
         addVisit("MultDivExpr", this::visitBinaryOp);
         addVisit("RelExpr", this::visitBinaryOp);
@@ -34,6 +33,8 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("MethodHeader", this::visitMethodHeader);
         addVisit("AssignmentExpr",this::visitAssignmentExpr);
         addVisit("ExprStmt",this::visitMethodDecl);
+        addVisit("ThisExpr",this::visitThis);
+        addVisit("MainMethodDecl",this::visitMethodDecl);
         addVisit("MethodCallExpr", this::visitMethodCall);
         addVisit("ReturnExpression", this::visitReturnStmt);
         this.setDefaultVisit(this::start);
@@ -41,7 +42,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private String visitThis(JmmNode jmmNode, List<Report> reports) {
-        return "";
+      return "";
     }
 
     private String visitArray(JmmNode jmmNode, List<Report> reports) {
@@ -111,6 +112,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
     private String visitMethodCall(JmmNode jmmNode, List<Report> reports) {
         String identifier;
+            if(isThisInStatic(jmmNode)){
+                addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
+                return "<INVALID>";
+            }
+
+
         if ( jmmNode.hasAttribute("value")){
             identifier = jmmNode.get("value");}
             else if(jmmNode.hasAttribute("method")){
