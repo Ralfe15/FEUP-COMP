@@ -23,11 +23,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("Start", this::start);
         addVisit("MethodDecl", this::visitMethodDecl);
         addVisit("IdExpr", this::visitIdentifier);
+
         addVisit("AddSubExpr", this::visitBinaryOp);
         addVisit("MultDivExpr", this::visitBinaryOp);
         addVisit("RelExpr", this::visitBinaryOp);
         addVisit("AndOrExpr", this::visitBinaryOp);
         addVisit("IfElseStmt", this::visitCondition);
+        addVisit("ArrayAccessExpr",this::visitArray);
         addVisit("WhileStmt", this::visitCondition);
         addVisit("MethodHeader", this::visitMethodHeader);
         addVisit("AssignmentExpr",this::visitAssignmentExpr);
@@ -37,6 +39,16 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         this.setDefaultVisit(this::start);
 
     }
+
+    private String visitArray(JmmNode jmmNode, List<Report> reports) {
+        var varName = jmmNode.getJmmChild(0).get("value");
+        if (isPrimitive(varName)){
+            addSemanticErrorReport(reports, jmmNode, "Cannot access primitive variable");
+            return "<Invalid>";
+        }
+        return "";
+    }
+
 
     private String visitAssignmentExpr(JmmNode jmmNode, List<Report> reports) {
         for (JmmNode child : jmmNode.getChildren()) {
@@ -109,27 +121,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     }
                 }
             }
-
-
             else {
             return "";}
 
         Type identifierType = symbolTable.getSymbolByName(identifier);
 
-        if (hasArrayAccess(jmmNode) && !identifierType.isArray()) {
-            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
-            return "<Invalid>";
-        }
-        if(hasArrayAccess(jmmNode) && hasArrayAccess(jmmNode.getJmmParent().getJmmChild(1)))
-        {
-            String type =symbolTable.getSymbolByName(jmmNode.getJmmParent().getJmmChild(1).get("value")).getName();
 
-            if(type.equals("boolean") || type.equals("void"))
-            {
-                addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed by an "+ type );
-                return "<Invalid>";
-            }
-        }
         return "";
     }
 
