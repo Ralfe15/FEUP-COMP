@@ -424,7 +424,14 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         {
             if(hasArrayAccess(jmmNode) && hasArrayAccess(jmmNode.getJmmChild(0)))
             {
-                String type =symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")).getName();
+                String type;
+                if (!jmmNode.getJmmChild(0).hasAttribute("value")){
+                    type = getType(jmmNode.getJmmChild(0)).getName();
+                }
+                else{
+                    type =symbolTable.getSymbolByName(jmmNode.getJmmChild(0).get("value")).getName();
+
+                }
 
                 if(type.equals("boolean") || type.equals("void"))
                 {
