@@ -95,8 +95,8 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         return Arrays.asList("AndOrExpr","RelExpr","AddSubExpr","MultDivExpr").contains(operator);
 
     }
-    public boolean checkConditions(JmmNode node){
-        return node.getKind().equals("WhileStmt") && node.getJmmParent().getJmmParent().getKind().equals("IfElseStmt");
+    public boolean checkConditions(JmmNode node, String condition){
+        return node.getKind().equals(condition) && node.getJmmParent().getJmmParent().getKind().equals(condition);
     }
     private String visitCondition(JmmNode jmmNode, List<Report> reports) {
         for (JmmNode child : jmmNode.getChildren()) {
@@ -105,7 +105,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     continue;
             }
             else if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
-                if(checkConditions(jmmNode)){
+                if(checkConditions(jmmNode,"WhileStmt") || checkConditions(jmmNode,"IfElseStmt")){
                     if (isOperator(child.getKind())){
                         visitBinaryOp(child,reports);
                         if(isBool(child.getJmmChild(0)) && isBool(child.getJmmChild(1)) )
@@ -124,7 +124,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                             continue;
                         }
 
-                    else if(child.hasAttribute("type") && child.get("type").equals("boolean") || symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean"))
+                    else if(child.hasAttribute("type") && child.get("type").equals("boolean") || (child.hasAttribute("value") && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean")))
                     {continue;}
                 }
                 addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
