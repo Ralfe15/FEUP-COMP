@@ -42,6 +42,24 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private String visitThis(JmmNode jmmNode, List<Report> reports) {
+
+        if(jmmNode.getJmmParent().getKind().equals("MethodCallExpr")){
+            if(!symbolTable.getMethods().contains(jmmNode.getJmmParent().get("method"))){
+                if(!(symbolTable.getSuper() == null)){
+                    if(symbolTable.getImports().contains(symbolTable.getSuper())){
+                        return "";
+
+                    }
+                    else {
+                        addSemanticErrorReport(reports, jmmNode, "The class "+jmmNode.getJmmParent().get("method") +" was not imported");
+                        return "<Invalid>";
+                    }
+                }
+
+                addSemanticErrorReport(reports, jmmNode, "The method "+jmmNode.getJmmParent().get("method") +" dont exist");
+                return "<Invalid>";
+            }
+        }
       return "";
     }
 
@@ -83,6 +101,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 {
                     addSemanticErrorReport(reports, jmmNode, "Class " +varNameType1+ " dont extend " + varNameType);
                     return "<Invalid>";
+                }
+                else{
+                    if(symbolTable.getSuper() != null && !symbolTable.getImports().contains(symbolTable.getSuper())){
+                        addSemanticErrorReport(reports, jmmNode, "Import issue");
+                        return "<Invalid>";
+                    }
+
                 }
             }
 
@@ -148,6 +173,9 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private String visitMethodCall(JmmNode jmmNode, List<Report> reports) {
+        for (JmmNode childs : jmmNode.getChildren()) {
+            visit(childs, reports);
+        }
         String identifier;
             if(isThisInStatic(jmmNode)){
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
@@ -165,9 +193,14 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     if(!(symbolTable.getSuper() == null)){
                         return "";
                     }
+                    if(symbolTable.getSuper() != null && !symbolTable.getImports().contains(symbolTable.getSuper())){
+                        addSemanticErrorReport(reports, jmmNode, "Import issue");
+                        return "<Invalid>";
+                    }
                     if ( symbolTable.getMethods().contains(identifier)){
                         return  "";
                     }
+
                     else {
                         addSemanticErrorReport(reports, jmmNode, "Variable '" + variable + "of Type: " +variableType.getName()+" don't have method "+ identifier);
                         return "<Invalid>";
@@ -517,6 +550,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             if ( variableType.getName().equals(symbolTable.getClassName())){
                 if(!(symbolTable.getSuper() == null)){
                     return "";
+                }
+                if(symbolTable.getSuper() != null && !symbolTable.getImports().contains(symbolTable.getSuper())){
+                    addSemanticErrorReport(reports, jmmNode, "Import issue");
+                    return "<Invalid>";
                 }
                 if ( symbolTable.getMethods().contains(identifier)){
                     return  "";
