@@ -91,16 +91,22 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         return "";
     }
+    private boolean isOperator(String operator){
+        return Arrays.asList("AndOrExpr","RelExpr","AddSubExpr","MultDivExpr").contains(operator);
 
+    }
+    public boolean checkConditions(JmmNode node){
+        return node.getKind().equals("WhileStmt") && node.getJmmParent().getJmmParent().getKind().equals("IfElseStmt");
+    }
     private String visitCondition(JmmNode jmmNode, List<Report> reports) {
         for (JmmNode child : jmmNode.getChildren()) {
             String type = visit(child, reports);
-            if (jmmNode.getKind().equals("WhileStmt") && ((child.getKind().equals("RelExpr")) || child.getKind().equals("BlockStmt")) ){
+            if ((jmmNode.getKind().equals("WhileStmt") || jmmNode.getKind().equals("IfElseStmt"))  && ((child.getKind().equals("RelExpr")) || child.getKind().equals("BlockStmt")) ){
                     continue;
             }
             else if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
-                if(jmmNode.getKind().equals("WhileStmt") && jmmNode.getJmmParent().getJmmParent().getKind().equals("WhileStmt")){
-                    if (child.getKind().equals("AndOrExpr")){
+                if(checkConditions(jmmNode)){
+                    if (isOperator(child.getKind())){
                         visitBinaryOp(child,reports);
                         if(isBool(child.getJmmChild(0)) && isBool(child.getJmmChild(1)) )
                         {
@@ -112,13 +118,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     }
 
                 }
-                if(jmmNode.getKind().equals("WhileStmt")){
+                if(jmmNode.getKind().equals("WhileStmt") || jmmNode.getKind().equals("IfElseStmt")){
                         if(isBool(child))
                         {
                             continue;
                         }
 
-                    else if(symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean"))
+                    else if(child.hasAttribute("type") && child.get("type").equals("boolean") || symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean"))
                     {continue;}
                 }
                 addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
