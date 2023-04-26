@@ -37,8 +37,36 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         addVisit("MainMethodDecl",this::visitMethodDecl);
         addVisit("MethodCallExpr", this::visitMethodCall);
         addVisit("ReturnExpression", this::visitReturnStmt);
+        addVisit("Params",this::visitParams);
         this.setDefaultVisit(this::start);
 
+    }
+
+    private String visitParams(JmmNode jmmNode, List<Report> reports) {
+        // check Params size
+
+        String methodName = jmmNode.getJmmParent().get("method");
+        int index = 0;
+        String callerName = getTypeSafe(jmmNode.getJmmParent().getJmmChild(0));
+        Type callerType = symbolTable.getSymbolByName(callerName);
+        if(symbolTable.getImports().contains(callerType.getName())){
+            return "";
+        }
+        int  callerSize = jmmNode.getChildren().size();
+        int methodSize = symbolTable.getMethod(methodName).getArgs().size();
+        if(callerSize != methodSize){
+            addSemanticErrorReport(reports, jmmNode, methodName + " expects " +methodSize + " Arguments");
+            return "<Invalid>";
+        }
+        for (var child: jmmNode.getChildren()){
+            if(!getType(child).equals(symbolTable.getMethod(methodName).getArgs().get(index).getType()))
+            {
+                addSemanticErrorReport(reports, jmmNode, "Wrong param type");
+                return "<Invalid>";
+            }
+            index++;
+        }
+        return "";
     }
 
     private String visitThis(JmmNode jmmNode, List<Report> reports) {
@@ -233,10 +261,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             case "BoolExpr":
                 type = new Type("boolean", isArray);
                 return type;
-            case "Identifier":
-                type = new Type("UNKNOWN", isArray);
-                return type;
-            case "Integer":
+            case "IdExpr":
+
+                return symbolTable.getSymbolByName(getTypeSafe(jmmNode));
+            case "IntExpr":
                 type = new Type("int", isArray);
                 return type;
             case "NewArray":
