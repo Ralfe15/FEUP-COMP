@@ -256,6 +256,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private String getTypeSafe(JmmNode jmmNode) {
+
         if ( jmmNode.hasAttribute("value")){
             return jmmNode.get("value");
         }
@@ -287,7 +288,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     private Type getTypeFromSymbolTable(JmmNode node, Type type) {
         if (!type.getName().equals("UNKNOWN")) {
             return type;
-        } else if (node.hasAttribute("bool") || isVariableDeclaredWithMethod(getTypeSafe(node),node.getJmmParent().get("name"))) {
+        } else if (node.hasAttribute("bool") || (node.getJmmParent().hasAttribute("name") && isVariableDeclaredWithMethod(getTypeSafe(node),node.getJmmParent().get("name")))) {
             if(node.hasAttribute("bool")){
                 return new Type("boolean",false);
             }
@@ -296,8 +297,14 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
             }
         } else {
+            if(node.hasAttribute("value") ){
+                if (! isVariableDeclared(node.get("value"))){
+                    return new Type("ERROR",false);
+                }
+            }
             return type;
         }
+
     }
 
     private boolean isInvalidCondition(JmmNode node, Type type) {
@@ -411,6 +418,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
                 }
                 rhsType = getTypeFromSymbolTable(jmmNode.getJmmChild(1), rhsType);
+                if ( rhsType.getName().equals("ERROR")){
+                    addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Variable "+jmmNode.getJmmChild(1).get("value")+" not declared" );
+                    return "<INVALID>";
+                }
             }
             if(isThisInStatic(lhsNode) || isThisInStatic(rhsNode)){
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
