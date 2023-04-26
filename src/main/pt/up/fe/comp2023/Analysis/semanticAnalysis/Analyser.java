@@ -157,7 +157,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             if ((jmmNode.getKind().equals("WhileStmt") || jmmNode.getKind().equals("IfElseStmt"))  && ((child.getKind().equals("RelExpr")) || child.getKind().equals("BlockStmt")) ){
                     continue;
             }
-            else if (child.hasAttribute("value") ? isBool(child) : true) {
+            else if (true) {
                 if(checkConditions(jmmNode,"WhileStmt") || checkConditions(jmmNode,"IfElseStmt")){
                     if (isOperator(child.getKind())){
                         visitBinaryOp(child,reports);
@@ -185,6 +185,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             }
         }
         return "";
+
 
     }
     public boolean isBool(JmmNode node){
@@ -662,15 +663,31 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be Found.");
             return "<Invalid>";
         }
-
+        if(!isVariableTypeValid(identifier,identifierType)){
+            addSemanticErrorReport(reports, jmmNode, "Variable Type " + identifierType.getName() + " dont exist.");
+            return "<Invalid>";
+        }
         identifierType = symbolTable.getSymbolByName(identifier);
 
         if (hasArrayAccess(jmmNode) && !identifierType.isArray()) {
-            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
+            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + " cannot be accessed .");
             return "<Invalid>";
         }
 
         return "";
+    }
+
+    private boolean isVariableTypeValid(String identifier, Type identifierType) {
+        if(Arrays.asList("int","boolean","void", "UNKNOWN").contains(identifierType.getName())){
+            return true;
+        }
+        if(!symbolTable.getImports().contains(identifierType.getName())  && !symbolTable.getClassName().equals(identifierType.getName())){
+            if(symbolTable.getSuper() != null && !symbolTable.getSuper().equals(identifierType.getName())){
+                return false;
+            }
+            return false;
+        }
+        return true;
     }
 
     private String visitMethodHeader(JmmNode jmmNode, List<Report> reports) {
