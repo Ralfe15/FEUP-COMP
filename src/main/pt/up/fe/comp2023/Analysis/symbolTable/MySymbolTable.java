@@ -157,9 +157,9 @@ public class MySymbolTable implements SymbolTable {
             try {
                 Integer.parseInt(varName);
             } catch(NumberFormatException e) {
-                return new Type("UNKNOW",false);
+                return new Type("UNKNOWN",false);
             } catch(NullPointerException e) {
-                return new Type("UNKNOW",false);
+                return new Type("UNKNOWN",false);
             }
             // only got here if we didn't return false
             return new Type ( "int",false);
