@@ -99,8 +99,27 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     continue;
             }
             else if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
-                if(jmmNode.getKind().equals("WhileStmt") && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean")){
-                    continue;
+                if(jmmNode.getKind().equals("WhileStmt") && jmmNode.getJmmParent().getJmmParent().getKind().equals("WhileStmt")){
+                    if (child.getKind().equals("AndOrExpr")){
+                        visitBinaryOp(child,reports);
+                        if(isBool(child.getJmmChild(0)) && isBool(child.getJmmChild(1)) )
+                        {
+                            continue;
+                        }
+                    }
+                    if((child.hasAttribute("value")) && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean")) {
+                        continue;
+                    }
+
+                }
+                if(jmmNode.getKind().equals("WhileStmt")){
+                        if(isBool(child))
+                        {
+                            continue;
+                        }
+
+                    else if(symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean"))
+                    {continue;}
                 }
                 addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
                 return "<Invalid>";
@@ -108,6 +127,18 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         }
         return "";
 
+    }
+    public boolean isBool(JmmNode node){
+
+        if(node.hasAttribute("value")){
+            return symbolTable.getSymbolByName(getTypeSafe(node)).getName().equals("boolean");
+        }
+        else {
+            if (node.hasAttribute("bool") && isPrimitive(node.get("bool"))){
+                return true;
+            }
+        }
+        return false;
     }
 
     private String visitMethodCall(JmmNode jmmNode, List<Report> reports) {
