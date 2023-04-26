@@ -129,7 +129,36 @@ public class MySymbolTable implements SymbolTable {
         }
         return false;
     }
+    public Type getSymbolByNameWithParent(String varName,String methodOrClassname){
+         MethodInfo method = getMethod(methodOrClassname);
+            int count = 0;
+            for (var ex : method.getLocalVariables()){
+                var name = ex.getName();
+                if(name.equals(varName))
+                {
+                    return method.getLocalVariables().get(count).getType();
 
+                }
+                count++;
+            }
+            for( var a : getArgsByMethod(methodOrClassname)){
+                if ( a.getName().equals(varName)){
+                    return a.getType();
+                }
+            }
+
+
+        try {
+            Integer.parseInt(varName);
+        } catch(NumberFormatException e) {
+            return new Type("UNKNOWN",false);
+        } catch(NullPointerException e) {
+            return new Type("UNKNOWN",false);
+        }
+        // only got here if we didn't return false
+        return new Type ( "int",false);
+
+    }
     public Type getSymbolByName(String varName) {
         // Check if the variable exists in the fields
         for (String method : getMethods()) {

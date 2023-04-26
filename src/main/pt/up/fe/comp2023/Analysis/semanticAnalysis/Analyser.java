@@ -49,7 +49,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         int index = 0;
         String callerName = getTypeSafe(jmmNode.getJmmParent().getJmmChild(0));
         Type callerType = symbolTable.getSymbolByName(callerName);
-        if(symbolTable.getImports().contains(callerType.getName())){
+        if(symbolTable.getImports().contains(callerType.getName()) || !symbolTable.getMethods().contains(methodName)){
             return "";
         }
         int  callerSize = jmmNode.getChildren().size();
@@ -157,7 +157,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             if ((jmmNode.getKind().equals("WhileStmt") || jmmNode.getKind().equals("IfElseStmt"))  && ((child.getKind().equals("RelExpr")) || child.getKind().equals("BlockStmt")) ){
                     continue;
             }
-            else if (child.hasAttribute("value") ? !symbolTable.getSymbolByName(child.get("value")).equals("boolean") : true) {
+            else if (child.hasAttribute("value") ? isBool(child) : true) {
                 if(checkConditions(jmmNode,"WhileStmt") || checkConditions(jmmNode,"IfElseStmt")){
                     if (isOperator(child.getKind())){
                         visitBinaryOp(child,reports);
@@ -166,7 +166,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                             continue;
                         }
                     }
-                    if((child.hasAttribute("value")) && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean")) {
+                    if((child.hasAttribute("value")) && isBool(child)) {
                         continue;
                     }
 
@@ -189,8 +189,25 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
     public boolean isBool(JmmNode node){
 
+        var condition = true;
+        var parent = node.getJmmParent();
+        var parentName = "";
+        while (condition){
+            if(parent.getKind().equals("MainMethodDecl")){
+                parentName = "main";
+                break;
+            }
+            if( (parent.getKind().equals("MethodDecl"))){
+                parentName = parent.get("name");
+                break;
+            }
+            else {
+                parent = parent.getJmmParent();
+            }
+        }
         if(node.hasAttribute("value")){
-            return symbolTable.getSymbolByName(getTypeSafe(node)).getName().equals("boolean");
+
+            return symbolTable.getSymbolByNameWithParent(getTypeSafe(node),parentName).getName().equals("boolean");
         }
         else {
             if (node.hasAttribute("bool") && isPrimitive(node.get("bool"))){
