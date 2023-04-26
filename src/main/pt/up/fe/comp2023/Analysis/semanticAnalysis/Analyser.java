@@ -262,7 +262,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         if ( jmmNode.getKind().equals("ArrayAccessExpr")){
             return getTypeSafe(jmmNode.getJmmChild(0));
         }
-        else return "UNKNOWN";
+        else return "#UNKNOWN";
     }
 
 
