@@ -682,10 +682,14 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             return true;
         }
         if(!symbolTable.getImports().contains(identifierType.getName())  && !symbolTable.getClassName().equals(identifierType.getName())){
-            if(symbolTable.getSuper() != null && !symbolTable.getSuper().equals(identifierType.getName())){
+            if(symbolTable.getSuper() != null ){
+                if(!symbolTable.getSuper().equals(identifierType.getName())){
+                    return false;
+                }
+            }
+            else {
                 return false;
             }
-            return false;
         }
         return true;
     }
