@@ -620,7 +620,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
 
         // Check if the return type is compatible
-        if (!expressionType.equals(methodReturnType)) {
+        if (!expressionType.getName().equals(methodReturnType.getName())) {
 
             // If the expression is a method call on an imported class, assume it's valid
             if (returnExpression.getKind().equals("MethodCallExpr") || returnExpression.getKind().equals("IdExpr")) {
@@ -673,6 +673,18 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 visit(returnExpression, reports);
             }
         }
+
+        if(!methodReturnType.getName().equals(expressionType.getName())){
+            if(returnExpression.getKind().equals("BoolExpr") && methodReturnType.getName().equals(getType(returnExpression).getName())){
+
+            }
+            else{
+                addSemanticErrorReport(reports, jmmNode, "Return is not correct");
+                return "";
+            }
+        }
+
+
         visit(returnExpression, reports);
         return "";
     }
