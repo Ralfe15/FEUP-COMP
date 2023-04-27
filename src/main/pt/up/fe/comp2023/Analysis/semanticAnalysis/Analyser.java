@@ -279,6 +279,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 return true;
             }
         }
+
+        if(node.hasAttribute("method")){
+            String methodName = node.get("method");
+            if (symbolTable.getMethod(methodName) != null){
+                return (symbolTable.getMethod(methodName).getRetType().getName().equals("boolean"));
+            }
+        }
         return false;
     }
 
