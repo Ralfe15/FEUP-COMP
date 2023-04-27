@@ -43,7 +43,7 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
                 for (JmmNode argNode : child.getChildren()) {
                     String argName = argNode.get("argName");
                     String argType = argNode.getChildren().get(0).get("rawType");
-                    boolean isArray = argType.equals("ArrayType");
+                    boolean isArray = child.getChildren().get(0).getJmmChild(0).getKind().contains("Array");
                     args.add(new Symbol(new Type(argType, isArray), argName));
                 }
             } else if (child.getKind().equals("VarDeclaration")) {

@@ -425,8 +425,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 if(node.getJmmChild(0).getChildren().isEmpty() && node.getJmmChild(1).getChildren().isEmpty()){
                     return true;
                 }
+
                 if(lhsType.isArray() && rhsType.isArray()) {
                     return false;}
+                if((node.getJmmChild(0).getJmmChild(0).getChildren().isEmpty()) || (rhsType.isArray() && node.getJmmChild(1).getJmmChild(0).getChildren().isEmpty())){
+                    return false;
+                }
                 return true;
             }
 
@@ -658,8 +662,9 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         Type identifierType = symbolTable.getSymbolByNameWithParent(identifier,getParentMethodName(jmmNode));
 
         if (hasArrayAccess(jmmNode) && !identifierType.isArray() && !jmmNode.getJmmParent().getKind().equals("IdExpr")) {
-            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
-            return "<Invalid>";
+            if(!symbolTable.getSymbolByNameWithParent(identifier,getParentMethodName(jmmNode)).isArray())
+            {addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
+            return "<Invalid>";}
         }
         if(!jmmNode.getChildren().isEmpty())
         {
