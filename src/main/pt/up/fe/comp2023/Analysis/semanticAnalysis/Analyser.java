@@ -44,6 +44,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
     private String visitParams(JmmNode jmmNode, List<Report> reports) {
         // check Params size
+        for ( var child : jmmNode.getChildren()){
+            if(isFieldInStatic(child)){
+                addSemanticErrorReport(reports, child, "Main class cannot have static variables " );
+                return "<INVALID>";
+            }
+        }
+
 
         String methodName = jmmNode.getJmmParent().get("method");
         int index = 0;
@@ -134,6 +141,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
             return "<INVALID>";
         }
+        if(isFieldInStatic(jmmNode.getJmmChild(0) )|| isFieldInStatic(jmmNode.getJmmChild(1) )){
+            addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have fields " );
+            return "<INVALID>";
+        }
 
             if((nodeLhs.equals("MethodCallExpr") ||nodeLhs.equals("IdExpr")) && (nodeRhs.equals("MethodCallExpr") ||( nodeLhs.equals("IdExpr") && nodeRhs.equals("IdExpr")) || nodeRhs.equals("IntExpr") || nodeRhs.equals("BoolExpr"))){
             var varName = getTypeSafe(jmmNode.getJmmChild(1));
@@ -167,6 +178,32 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         return "";
     }
+
+    private boolean isFieldInStatic(JmmNode node) {
+        if(node.hasAttribute("value")){
+            var variable = node.get("value");
+                var parent = node.getJmmParent();
+                while (true){
+                    if(parent.getKind().equals("MainMethodDecl")){
+                        for(var field: symbolTable.getFields()){
+                            return (field.getType().equals(symbolTable.getSymbolByNameWithParent(variable,"main")) && field.getName().equals(variable));
+                        }
+                        return false;
+                    }
+                    if( (parent.getKind().equals("ClassDeclaration"))){
+                        return false;
+                    }
+                    else {
+                        parent = parent.getJmmParent();
+                    }
+
+                }
+
+
+        }
+        return false;
+    }
+
     private boolean isOperator(String operator){
         return Arrays.asList("AndOrExpr","RelExpr","AddSubExpr","MultDivExpr").contains(operator);
 
@@ -254,7 +291,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
                 return "<INVALID>";
             }
-
 
         if ( jmmNode.hasAttribute("value")){
             identifier = jmmNode.get("value");}
@@ -544,7 +580,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have this " );
                 return "<INVALID>";
             }
-
+            if(isFieldInStatic(lhsNode) || isFieldInStatic(rhsNode)){
+                addSemanticErrorReport(reports, jmmNode, "Main class cannot have static variables " );
+                return "<INVALID>";
+            }
             if (isInvalidCondition(jmmNode, lhsType)) {
                 addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Invalid condition type : " + rhsType.print());
                 return "<INVALID>";
@@ -631,6 +670,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
     private String visitIdentifier(JmmNode jmmNode,List<Report> reports) {
         String identifier;
+
         if ( jmmNode.hasAttribute("value")){
             identifier = jmmNode.get("value");}
         else if(jmmNode.hasAttribute("method")){
