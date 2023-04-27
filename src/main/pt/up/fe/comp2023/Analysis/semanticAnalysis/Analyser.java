@@ -307,7 +307,9 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 type = new Type("boolean", isArray);
                 return type;
             case "IdExpr":
-
+                if(!jmmNode.getChildren().isEmpty()){
+                    return getType(jmmNode.getJmmChild(0));
+                }
                 return symbolTable.getSymbolByNameWithParent(getTypeSafe(jmmNode),getParentMethodName(jmmNode));
             case "IntExpr":
                 type = new Type("int", isArray);
