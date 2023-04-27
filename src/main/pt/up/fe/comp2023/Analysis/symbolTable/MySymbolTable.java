@@ -26,7 +26,8 @@ public class MySymbolTable implements SymbolTable {
     Map<String, MethodInfo> methods = new HashMap<>();
     List<Symbol> fields = new ArrayList<>();
     List<Report> reports = new ArrayList<>();
-    public MySymbolTable(JmmParserResult jmmParserResult){
+
+    public MySymbolTable(JmmParserResult jmmParserResult) {
         new ImportVisitor().visit(jmmParserResult.getRootNode(), imports);
         new ClassVisitor().visit(jmmParserResult.getRootNode(), classInfo);
         MethodVisitor methodVisitor = new MethodVisitor();
@@ -34,12 +35,25 @@ public class MySymbolTable implements SymbolTable {
 
     }
 
+    public static Optional<JmmNode> getClosestMethod(JmmNode node) {
+        var method = node.getAncestor("MethodDecl");
+        if (method.isPresent()) {
+            return method;
+        }
+        method = node.getAncestor("MainMethodDecl");
+        return method;
+    }
 
+    public static String getMethodName(JmmNode method) {
+        return method.getKind().equals("MethodDecl") ?
+                method.get("name") : "main";
+    }
 
     @Override
     public List<String> getImports() {
         return imports;
     }
+
     public List<Report> getReports() {
         return reports;
     }
@@ -66,7 +80,7 @@ public class MySymbolTable implements SymbolTable {
 
     @Override
     public Type getReturnType(String s) {
-        if(methods.containsKey(s)) {
+        if (methods.containsKey(s)) {
             return methods.get(s).getRetType();
         }
         return null;
@@ -74,7 +88,7 @@ public class MySymbolTable implements SymbolTable {
 
     @Override
     public List<Symbol> getParameters(String s) {
-        if(methods.containsKey(s)) {
+        if (methods.containsKey(s)) {
             return methods.get(s).getArgs();
         }
         return null;
@@ -84,8 +98,8 @@ public class MySymbolTable implements SymbolTable {
     public List<Symbol> getLocalVariables(String s) {
         return methods.get(s).getLocalVariables();
     }
-    public Map<String, MethodInfo> getMethodsDict()
-    {
+
+    public Map<String, MethodInfo> getMethodsDict() {
         return methods;
     }
 
@@ -97,19 +111,19 @@ public class MySymbolTable implements SymbolTable {
         return null;
     }
 
-    public MethodInfo getMethod(String methodName){
-        for(String method : getMethodsDict().keySet())
-        {
-            if(method.equals(methodName)){
-                return  getMethodsDict().get(method);
+    public MethodInfo getMethod(String methodName) {
+        for (String method : getMethodsDict().keySet()) {
+            if (method.equals(methodName)) {
+                return getMethodsDict().get(method);
             }
         }
-     return null;
+        return null;
     }
-    public List<Symbol> getArgsByMethod(String methodName){
-    //get args by method
+
+    public List<Symbol> getArgsByMethod(String methodName) {
+        //get args by method
         MethodInfo methodInfo = getMethod(methodName);
-        if ( methodInfo == null) return new ArrayList<>();
+        if (methodInfo == null) return new ArrayList<>();
         if (!methodInfo.getArgs().isEmpty()) {
             return methodInfo.getArgs();
         }
@@ -117,142 +131,136 @@ public class MySymbolTable implements SymbolTable {
     }
 
     public boolean hasImport(String identifier) {
-        for (String _import : getImports()){
-            if(_import.equals(identifier)) return true;
+        for (String _import : getImports()) {
+            if (_import.equals(identifier)) return true;
         }
         return false;
     }
 
     public boolean hasMethod(String identifier) {
-        for (String _method : getMethods()){
-            if(_method.equals(identifier)) return true;
+        for (String _method : getMethods()) {
+            if (_method.equals(identifier)) return true;
         }
         return false;
     }
 
-    public Symbol getSymbolByNameWithMethodName(String varName, String methodOrClassname){
+    public Symbol getSymbolByNameWithMethodName(String varName, String methodOrClassname) {
         MethodInfo method = getMethod(methodOrClassname);
         int count = 0;
-        if (method == null) return new Symbol(new Type("UNKNOWN",false),"null");
-        for (var ex : method.getLocalVariables()){
+        if (method == null) return new Symbol(new Type("UNKNOWN", false), "null");
+        for (var ex : method.getLocalVariables()) {
             var name = ex.getName();
-            if(name.equals(varName))
-            {
-                return new Symbol (method.getLocalVariables().get(count).getType(),methodOrClassname);
+            if (name.equals(varName)) {
+                return new Symbol(method.getLocalVariables().get(count).getType(), methodOrClassname);
 
             }
             count++;
         }
-        for( var a : getArgsByMethod(methodOrClassname)){
-            if ( a.getName().equals(varName)){
-                return new Symbol(a.getType(),methodOrClassname);
+        for (var a : getArgsByMethod(methodOrClassname)) {
+            if (a.getName().equals(varName)) {
+                return new Symbol(a.getType(), methodOrClassname);
             }
         }
-        for(var symbol : getFields()){
-            if(symbol.getName().equals(varName))
-            {
-                return new Symbol(symbol.getType(),"Field");
+        for (var symbol : getFields()) {
+            if (symbol.getName().equals(varName)) {
+                return new Symbol(symbol.getType(), "Field");
 
             }
         }
         try {
             Integer.parseInt(varName);
-        } catch(NumberFormatException e) {
-            return new Symbol(new Type("UNKNOWN",false),"null");
-        } catch(NullPointerException e) {
-            return new Symbol(new Type("UNKNOWN",false),"null");
+        } catch (NumberFormatException e) {
+            return new Symbol(new Type("UNKNOWN", false), "null");
+        } catch (NullPointerException e) {
+            return new Symbol(new Type("UNKNOWN", false), "null");
         }
         // only got here if we didn't return false
-        return new Symbol(new Type("int",false),"null");
+        return new Symbol(new Type("int", false), "null");
 
     }
-    public Type getTypeIfField( String varName){
-        for(var field : getFields()){
-            if(field.getName().equals(varName))
-            {
+
+    public Type getTypeIfField(String varName) {
+        for (var field : getFields()) {
+            if (field.getName().equals(varName)) {
                 return field.getType();
 
             }
         }
-        return new Type("UNKNOWN",false);
+        return new Type("UNKNOWN", false);
     }
-    public Type getSymbolByNameWithParent(String varName,String methodOrClassname){
-         MethodInfo method = getMethod(methodOrClassname);
-        int count = 0;
-            if (method == null){
-                return getTypeIfField(varName);
-            }
-            for (var ex : method.getLocalVariables()){
-                var name = ex.getName();
-                if(name.equals(varName))
-                {
-                    return method.getLocalVariables().get(count).getType();
 
-                }
-                count++;
+    public Type getSymbolByNameWithParent(String varName, String methodOrClassname) {
+        MethodInfo method = getMethod(methodOrClassname);
+        int count = 0;
+        if (method == null) {
+            return getTypeIfField(varName);
+        }
+        for (var ex : method.getLocalVariables()) {
+            var name = ex.getName();
+            if (name.equals(varName)) {
+                return method.getLocalVariables().get(count).getType();
+
             }
-            for( var a : getArgsByMethod(methodOrClassname)){
-                if ( a.getName().equals(varName)){
-                    return a.getType();
-                }
+            count++;
+        }
+        for (var a : getArgsByMethod(methodOrClassname)) {
+            if (a.getName().equals(varName)) {
+                return a.getType();
             }
-        if (!getTypeIfField(varName).getName().equals("UNKNOWN")) { return getTypeIfField(varName);}
+        }
+        if (!getTypeIfField(varName).getName().equals("UNKNOWN")) {
+            return getTypeIfField(varName);
+        }
         try {
             Integer.parseInt(varName);
-        } catch(NumberFormatException e) {
-            return new Type("UNKNOWN",false);
-        } catch(NullPointerException e) {
-            return new Type("UNKNOWN",false);
+        } catch (NumberFormatException e) {
+            return new Type("UNKNOWN", false);
+        } catch (NullPointerException e) {
+            return new Type("UNKNOWN", false);
         }
         // only got here if we didn't return false
-        return new Type ( "int",false);
+        return new Type("int", false);
 
     }
+
     public Type getSymbolByName(String varName) {
         // Check if the variable exists in the fields
         for (String method : getMethods()) {
             var a = methods.get(method);
             var d = a.getLocalVariables();
             int count = 0;
-            for (var ex : a.getLocalVariables()){
+            for (var ex : a.getLocalVariables()) {
                 var name = ex.getName();
-                if(name.equals(varName))
-                {
+                if (name.equals(varName)) {
                     return methods.get(method).getLocalVariables().get(count).getType();
 
                 }
-            count++;
+                count++;
             }
         }
-        for (String method : getMethods()){
-            for( var a : getArgsByMethod(method)){
-                if ( a.getName().equals(varName)){
+        for (String method : getMethods()) {
+            for (var a : getArgsByMethod(method)) {
+                if (a.getName().equals(varName)) {
                     return a.getType();
                 }
             }
         }
-        if (!getTypeIfField(varName).getName().equals("UNKNOWN")) { return getTypeIfField(varName);}
+        if (!getTypeIfField(varName).getName().equals("UNKNOWN")) {
+            return getTypeIfField(varName);
+        }
 
         try {
-                Integer.parseInt(varName);
-            } catch(NumberFormatException e) {
-                return new Type("UNKNOWN",false);
-            } catch(NullPointerException e) {
-                return new Type("UNKNOWN",false);
-            }
-            // only got here if we didn't return false
-            return new Type ( "int",false);
-
-    }
-
-    public static Optional<JmmNode> getClosestMethod(JmmNode node) {
-        var method = node.getAncestor("MethodDecl");
-        if (method.isPresent()) {
-            return method;
+            Integer.parseInt(varName);
+        } catch (NumberFormatException e) {
+            return new Type("UNKNOWN", false);
+        } catch (NullPointerException e) {
+            return new Type("UNKNOWN", false);
         }
-        method = node.getAncestor("MainMethodDecl");
-        return method;
+        // only got here if we didn't return false
+        return new Type("int", false);
+
     }
+
     public Optional<Symbol> getClosestSymbol(JmmNode node, String name) {
         var method = getClosestMethod(node);
         if (method.isPresent()) {
@@ -284,10 +292,5 @@ public class MySymbolTable implements SymbolTable {
         }
         var closestMethod = getClosestMethod(node);
         return closestMethod.filter(jmmNode -> this.getLocalVariables(getMethodName(jmmNode)).stream().anyMatch(s -> s.getName().equals(name))).isPresent();
-    }
-
-    public static String getMethodName(JmmNode method) {
-        return method.getKind().equals("MethodDecl") ?
-                method.get("name") : "main";
     }
 }
