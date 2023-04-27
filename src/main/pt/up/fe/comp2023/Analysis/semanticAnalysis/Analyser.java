@@ -652,7 +652,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
         Type identifierType = symbolTable.getSymbolByNameWithParent(identifier,getParentMethodName(jmmNode));
 
-        if (hasArrayAccess(jmmNode) && !identifierType.isArray()) {
+        if (hasArrayAccess(jmmNode) && !identifierType.isArray() && !jmmNode.getJmmParent().getKind().equals("IdExpr")) {
             addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
             return "<Invalid>";
         }
