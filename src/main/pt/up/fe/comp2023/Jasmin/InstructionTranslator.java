@@ -40,9 +40,6 @@ public class InstructionTranslator {
             case GOTO:
                 translatedInstruction.append(translateInstruction((GotoInstruction) instruction));
                 break;
-            case BRANCH:
-                translatedInstruction.append(translateInstruction((CondBranchInstruction) instruction, ancestorMethod));
-                break;
             default:
                 break;
         }
@@ -226,14 +223,6 @@ public class InstructionTranslator {
                 if (elementType == ElementType.OBJECTREF || elementType == ElementType.CLASS) {
                     jasminInstruction.append(getIndentation()).append("new ").append(caller.getName()).append("\n");
                     jasminInstruction.append(getIndentation()).append("dup");
-                } else if (elementType == ElementType.ARRAYREF) {
-                    ArrayList<Element> operands = instruction.getListOfOperands();
-                    if (operands.size() < 1) {
-                        return "";
-                    }
-
-                    jasminInstruction.append(getCorrespondingLoad(operands.get(0), ancestorMethod)).append("\n");
-                    jasminInstruction.append(getIndentation()).append("newarray int");
                 }
                 break;
             case arraylength:
