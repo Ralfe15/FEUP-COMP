@@ -420,6 +420,9 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     private boolean isInvalidOperator(JmmNode node, Type lhsType, Type rhsType) {
         if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || List.of("&&").contains(node.get("op")) || List.of("<").contains(node.get("op"))) {
             if (lhsType.isArray()) {
+                if(node.getJmmChild(0).getChildren().isEmpty() && node.getJmmChild(1).getChildren().isEmpty()){
+                    return true;
+                }
                 if(lhsType.isArray() && rhsType.isArray()) {
                     return false;}
                 return true;
