@@ -50,11 +50,6 @@ public class InstructionTranslator {
         return translatedInstruction.toString();
     }
 
-    public String translateInstruction(CondBranchInstruction instruction, Method ancestorMethod) {
-        return translateInstruction(instruction.getCondition(), ancestorMethod) + "\n" +
-                getIndentation() + "ifne " + instruction.getLabel();
-    }
-
     public String translateInstruction(GotoInstruction instruction) {
         return getIndentation() + "goto " + instruction.getLabel();
     }
