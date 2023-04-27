@@ -211,7 +211,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     private String visitCondition(JmmNode jmmNode, List<Report> reports) {
         for (JmmNode child : jmmNode.getChildren()) {
             String type = visit(child, reports);
-            if ((jmmNode.getKind().equals("WhileStmt") || jmmNode.getKind().equals("IfElseStmt")) && ((child.getKind().equals("RelExpr")) || child.getKind().equals("BlockStmt"))) {
+            if ((jmmNode.getKind().equals("WhileStmt") || jmmNode.getKind().equals("IfElseStmt")) && ( child.getKind().equals("BlockStmt"))) {
                 continue;
             } else if (true) {
                 if (checkConditions(jmmNode, "WhileStmt") || checkConditions(jmmNode, "IfElseStmt")) {
@@ -232,7 +232,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     } else if (child.hasAttribute("type") && child.get("type").equals("boolean") || (child.hasAttribute("value") && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean"))) {
                         continue;
                     }
-                    else if (isInt(child) && !child.getChildren().isEmpty()) {
+                    else if ( child.getChildren().size() >1 && (child.hasAttribute("type") && child.get("type").equals("int") || (child.hasAttribute("value") && symbolTable.getSymbolByName(child.get("value")).getName().equals("int")))) {
+                        continue;
+                    }
+                    else if (isInt(child) && child.getChildren().size() >1) {
                         continue;
                     }
                 }
@@ -468,7 +471,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private boolean isInvalidOperator(JmmNode node, Type lhsType, Type rhsType) {
-        if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || Objects.equals("&&", node.get("op")) || Objects.equals("<", node.get("op"))) {
+        if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || Objects.equals("&&", node.get("op")) || Objects.equals("<", node.get("op")) || Objects.equals(">", node.get("op"))) {
             if (lhsType.isArray()) {
                 if (node.getJmmChild(0).getChildren().isEmpty() && node.getJmmChild(1).getChildren().isEmpty()) {
                     return true;
@@ -495,11 +498,11 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             if (!Arrays.asList("int", "void", "boolean").contains(lhsType.getName())) {
                 return true;
             }
-            if ("<".contains(node.get("op"))) {
-                node.put("type", new Type("boolean", false).getName());
-                node.put("isArray", String.valueOf(new Type("boolean", false).isArray()));
+            if (Arrays.asList("<",">").contains(node.get("op"))) {
+                node.put("type", new Type("int", false).getName());
+                node.put("isArray", String.valueOf(new Type("int", false).isArray()));
             } else {
-                node.put("type", lhsType.getName());
+                node.put("type", "INVALID");
                 node.put("isArray", String.valueOf(lhsType.isArray()));
             }
 
