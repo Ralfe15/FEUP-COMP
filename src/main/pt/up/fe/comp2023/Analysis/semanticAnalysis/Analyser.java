@@ -232,6 +232,9 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     } else if (child.hasAttribute("type") && child.get("type").equals("boolean") || (child.hasAttribute("value") && symbolTable.getSymbolByName(child.get("value")).getName().equals("boolean"))) {
                         continue;
                     }
+                    else if (isInt(child) && !child.getChildren().isEmpty()) {
+                        continue;
+                    }
                 }
                 addSemanticErrorReport(reports, jmmNode, "Condition is not of type 'boolean'");
                 return "<Invalid>";
@@ -280,7 +283,25 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         }
         return false;
     }
+    public boolean isInt(JmmNode node) {
+        String parentName = getParentMethodName(node);
+        if (node.hasAttribute("value")) {
 
+            return symbolTable.getSymbolByNameWithParent(getTypeSafe(node), parentName).getName().equals("int");
+        } else {
+            if (node.hasAttribute("value") && isPrimitive(node.get("value"))) {
+                return true;
+            }
+        }
+
+        if (node.hasAttribute("method")) {
+            String methodName = node.get("method");
+            if (symbolTable.getMethod(methodName) != null) {
+                return (symbolTable.getMethod(methodName).getRetType().getName().equals("int"));
+            }
+        }
+        return false;
+    }
     private String visitMethodCall(JmmNode jmmNode, List<Report> reports) {
         for (JmmNode childs : jmmNode.getChildren()) {
             visit(childs, reports);
@@ -443,7 +464,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private boolean isInvalidCondition(JmmNode node, Type type) {
-        return node.getJmmParent() != null && (node.getJmmParent().getKind().equals("IfStmt") || node.getJmmParent().getKind().equals("WhileStmt")) && !type.getName().equals("boolean") && !Objects.equals("<", node.get("op"));
+        return node.getJmmParent() != null && (node.getJmmParent().getKind().equals("IfStmt") || node.getJmmParent().getKind().equals("WhileStmt")) && (!type.getName().equals("boolean") && !(type.getName().equals("int") && node.getKind().equals("RelExpr"))) ;
     }
 
     private boolean isInvalidOperator(JmmNode node, Type lhsType, Type rhsType) {
