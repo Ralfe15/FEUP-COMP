@@ -70,11 +70,13 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         for (var child : jmmNode.getChildren()) {
             if(child.hasAttribute("method")){
                 Type returntype = symbolTable.getReturnType(child.get("method"));
-                if(returntype.equals(symbolTable.getMethod(methodName).getArgs().get(index).getType())){
-                    continue;
+                visit(child,reports);
+                if(!returntype.equals(symbolTable.getMethod(methodName).getArgs().get(index).getType())){
+                    addSemanticErrorReport(reports, jmmNode, "Wrong param type");
+                    return "<Invalid>";
                 }
             }
-            if (!getType(child).equals(symbolTable.getMethod(methodName).getArgs().get(index).getType())) {
+            else if (!getType(child).equals(symbolTable.getMethod(methodName).getArgs().get(index).getType())) {
                 addSemanticErrorReport(reports, jmmNode, "Wrong param type");
                 return "<Invalid>";
             }
