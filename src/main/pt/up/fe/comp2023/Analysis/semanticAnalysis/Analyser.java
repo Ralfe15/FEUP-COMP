@@ -102,7 +102,8 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         for (JmmNode child : jmmNode.getChildren()) {
             visit(child, reports);
         }
-        var varName = getTypeSafe(jmmNode.getJmmChild(0));
+
+        var varName = !jmmNode.getChildren().isEmpty()? getTypeSafe(jmmNode.getJmmChild(0)): "";
         if (isPrimitive(varName)) {
             addSemanticErrorReport(reports, jmmNode, "Cannot access primitive variable");
             return "<Invalid>";
@@ -129,6 +130,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         for (JmmNode child : jmmNode.getChildren()) {
             visit(child, reports);
         }
+
         String nodeLhs = jmmNode.getJmmChild(0).getKind();
         String nodeRhs = jmmNode.getJmmChild(1).getKind();
         if (isThisInStatic(jmmNode.getJmmChild(0)) || isThisInStatic(jmmNode.getJmmChild(1))) {
@@ -139,7 +141,15 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Main class cannot have fields ");
             return "<INVALID>";
         }
+        if( nodeLhs.equals("IdExpr") && nodeRhs.equals("IdExpr") && !jmmNode.getJmmChild(1).getChildren().isEmpty()){
+                var varName = getTypeSafe(jmmNode.getJmmChild(1));
+                var varNameType = symbolTable.getSymbolByNameWithParent(varName, getParentMethodName(jmmNode.getJmmChild(1)));
+                if(!varNameType.isArray()){
+                    addSemanticErrorReport(reports, jmmNode.getJmmParent(), "Cannot access this variable ");
+                    return "<INVALID>";
+                }
 
+        }
         if ((nodeLhs.equals("MethodCallExpr") || nodeLhs.equals("IdExpr")) && (nodeRhs.equals("MethodCallExpr") || (nodeLhs.equals("IdExpr") && nodeRhs.equals("IdExpr")) || nodeRhs.equals("IntExpr") || nodeRhs.equals("BoolExpr"))) {
             var varName = getTypeSafe(jmmNode.getJmmChild(1));
             var varName1 = getTypeSafe(jmmNode.getJmmChild(0));
