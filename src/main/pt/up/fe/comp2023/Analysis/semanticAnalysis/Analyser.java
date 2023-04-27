@@ -403,7 +403,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             case "MultDivExpr":
             case "AddSubExpr":
             case "RelExpr":
-            case "AndOrExpr":
                 JmmNode leftOperand = jmmNode.getJmmChild(0);
                 JmmNode rightOperand = jmmNode.getJmmChild(1);
                 Type leftType = symbolTable.getSymbolByNameWithParent(getTypeSafe(leftOperand), getParentMethodName(leftOperand));
@@ -419,10 +418,35 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 }
                 // Determine the resulting type based on the actual operation type
                 if (leftType.getName().equals("int") && rightType.getName().equals("int")) {
-                    type = new Type("int", false); // Change isArray to false
-                } else if (leftType.getName().equals("boolean") && rightType.getName().equals("boolean")) {
                     type = new Type("boolean", false); // Change isArray to false
                 } else {
+                    // Handle other cases if necessary
+                    type = new Type("UNKNOWN", isArray);
+                }
+                return type;
+            case "AndOrExpr":
+                 leftOperand = jmmNode.getJmmChild(0);
+                 rightOperand = jmmNode.getJmmChild(1);
+                 leftType = symbolTable.getSymbolByNameWithParent(getTypeSafe(leftOperand), getParentMethodName(leftOperand));
+                 rightType = new Type ("UNKNOWN",false);
+                if (!(jmmNode.getJmmChild(1).getKind().equals("BoolExpr"))) {
+                    rightType = symbolTable.getSymbolByNameWithParent(getTypeSafe(jmmNode.getJmmChild(1)), getParentMethodName(rightOperand));
+
+                } else {
+
+                    rightType = symbolTable.getSymbolByName(getTypeSafe(rightOperand)) != null ?
+                            symbolTable.getSymbolByNameWithParent(getTypeSafe(rightOperand), getParentMethodName(rightOperand)) : new Type("int", false);
+
+                }
+                // Determine the resulting type based on the actual operation type
+                if (leftType.getName().equals("int") && rightType.getName().equals("int")) {
+                    type = new Type("int", false); // Change isArray to false
+                } else if ((leftType.getName().equals("boolean") || (jmmNode.getJmmChild(0).hasAttribute("bool"))) && ( (jmmNode.getJmmChild(1).hasAttribute("bool")|| rightType.getName().equals("boolean")))) {
+                    type = new Type("boolean", false); // Change isArray to false
+
+                } else if ((jmmNode.getJmmChild(0).hasAttribute("bool") && (jmmNode.getJmmChild(1).hasAttribute("bool")))) {
+                    type = new Type("boolean", false); // Change isArray to false
+                }else {
                     // Handle other cases if necessary
                     type = new Type("UNKNOWN", isArray);
                 }
