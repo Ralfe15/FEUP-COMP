@@ -13,20 +13,20 @@ public class JasminConverter implements JasminBackend {
         StringBuilder jasminCode = new StringBuilder();
 
         ClassUnit ollirClass = ollirResult.getOllirClass();
-        jasminCode.append(getClassDirective(ollirClass)).append("\n");
-        jasminCode.append(getSuperDirective(ollirClass)).append("\n");
+        jasminCode.append(getJasminClass(ollirClass)).append("\n");
+        jasminCode.append(getJasminSuper(ollirClass)).append("\n");
         jasminCode.append("\n");
 
-        jasminCode.append(getFieldDefinitions(ollirClass)).append("\n");
+        jasminCode.append(getJasminFields(ollirClass)).append("\n");
 
-        jasminCode.append(getMethodsDefinitions(ollirClass));
+        jasminCode.append(getJasminMethods(ollirClass));
 
         System.out.println(jasminCode);
 
         return new JasminResult(ollirResult, jasminCode.toString(), Collections.emptyList());
     }
 
-    private String getClassDirective(ClassUnit ollirClass) {
+    private String getJasminClass(ClassUnit ollirClass) {
         StringBuilder classDirective = new StringBuilder(".class ");
 
         if (ollirClass.isFinalClass()) {
@@ -52,14 +52,14 @@ public class JasminConverter implements JasminBackend {
         return classDirective.toString();
     }
 
-    private String getSuperDirective(ClassUnit ollirClass) {
+    private String getJasminSuper(ClassUnit ollirClass) {
         if (ollirClass.getSuperClass() == null) {
             ollirClass.setSuperClass("java/lang/Object");
         }
         return ".super " + ollirClass.getSuperClass();
     }
 
-    private String getFieldDefinitions(ClassUnit ollirClass) {
+    private String getJasminFields(ClassUnit ollirClass) {
         StringBuilder fieldDefinitions = new StringBuilder();
 
         for (Field field: ollirClass.getFields()) {
@@ -88,7 +88,7 @@ public class JasminConverter implements JasminBackend {
         return fieldDefinitions.toString();
     }
 
-    private String getMethodsDefinitions(ClassUnit ollirClass) {
+    private String getJasminMethods(ClassUnit ollirClass) {
         StringBuilder methodDefinitions = new StringBuilder();
         JasminMethodBuilder methodBuilder = new JasminMethodBuilder();
 
