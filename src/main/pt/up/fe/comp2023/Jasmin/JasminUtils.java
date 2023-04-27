@@ -40,7 +40,7 @@ public class JasminUtils {
         return className;
     }
 
-    public static String trimLiteral(String literal) {
+    public static String removeQuotes(String literal) {
         if (literal.charAt(0) != '"') {
             return literal;
         }

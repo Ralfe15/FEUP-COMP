@@ -41,8 +41,8 @@ public class JasminMethodBuilder {
             }
         }
 
-        methodDefinition.append("\t.limit stack ").append(instructionTranslator.getMaxLoadCounter()).append("\n");
-        methodDefinition.append("\t.limit locals ").append(this.getLocalsLimit()).append("\n");
+        methodDefinition.append("\t.limit stack 99").append("\n");
+        methodDefinition.append("\t.limit locals 99").append("\n");
 
         methodDefinition.append(instructions);
 
@@ -91,13 +91,5 @@ public class JasminMethodBuilder {
 
     public void setMethod(Method method) {
         this.method = method;
-    }
-
-    private int getLocalsLimit() {
-        if (this.method == null) {
-            return 0;
-        }
-
-        return this.method.getVarTable().values().stream().mapToInt(Descriptor::getVirtualReg).max().orElse(0) + 1;
     }
 }

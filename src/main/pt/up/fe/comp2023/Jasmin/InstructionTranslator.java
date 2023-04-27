@@ -190,7 +190,7 @@ public class InstructionTranslator {
                 }
 
 
-                jasminInstruction.append(".").append(JasminUtils.trimLiteral(methodName.getLiteral()));
+                jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
 
 
@@ -222,7 +222,7 @@ public class InstructionTranslator {
                 }
 
 
-                jasminInstruction.append(".").append(JasminUtils.trimLiteral(methodName.getLiteral()));
+                jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
 
 
@@ -296,7 +296,7 @@ public class InstructionTranslator {
                         if (second.isLiteral()) {
                             LiteralElement literalElement = (LiteralElement) second;
 
-                            int literal = Integer.parseInt(JasminUtils.trimLiteral(literalElement.getLiteral()));
+                            int literal = Integer.parseInt(JasminUtils.removeQuotes(literalElement.getLiteral()));
                             if (literal == 0) {
                                 return getCorrespondingLoad(first, ancestorMethod) + "\n" + getIndentation() + this.getIfBody("iflt");
                             } else {
@@ -325,7 +325,7 @@ public class InstructionTranslator {
         jasminInstruction.append("iinc ").append(this.getVirtualReg(operand, ancestorMethod));
         jasminInstruction.append(" ");
 
-        jasminInstruction.append(JasminUtils.trimLiteral(literalElement.getLiteral()));
+        jasminInstruction.append(JasminUtils.removeQuotes(literalElement.getLiteral()));
         return getIndentation() + jasminInstruction + "\n" + getCorrespondingLoad(operand, ancestorMethod);
     }
 
@@ -367,7 +367,7 @@ public class InstructionTranslator {
                 case INT32:
                 case BOOLEAN:
                     StringBuilder jasminInstruction = new StringBuilder(getIndentation());
-                    String literal = JasminUtils.trimLiteral(literalElement.getLiteral());
+                    String literal = JasminUtils.removeQuotes(literalElement.getLiteral());
 
                     try {
                         int literalInt = Integer.parseInt(literal);
