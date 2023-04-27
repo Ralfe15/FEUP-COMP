@@ -225,10 +225,6 @@ public class InstructionTranslator {
                     jasminInstruction.append(getIndentation()).append("dup");
                 }
                 break;
-            case arraylength:
-                jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
-                jasminInstruction.append(getIndentation()).append("arraylength");
-                break;
         }
         return jasminInstruction.toString();
     }
