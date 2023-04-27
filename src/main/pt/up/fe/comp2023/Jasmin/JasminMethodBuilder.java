@@ -20,7 +20,7 @@ public class JasminMethodBuilder {
         StringBuilder instructions = new StringBuilder();
 
         this.method.buildVarTable();
-        InstructionTranslator instructionTranslator = new InstructionTranslator();
+        InstructionGenerator instructionGenerator = new InstructionGenerator();
         boolean hasReturn = false;
 
         for (Instruction instruction: method.getInstructions()) {
@@ -33,7 +33,7 @@ public class JasminMethodBuilder {
                     instructions.append(entry.getKey()).append(":").append("\n");
                 }
             }
-            instructions.append(instructionTranslator.translateInstruction(instruction, method)).append("\n");
+            instructions.append(instructionGenerator.translateInstruction(instruction, method)).append("\n");
 
             if (instruction.getInstType() == InstructionType.CALL) {
                 if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)

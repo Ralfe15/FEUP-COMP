@@ -4,7 +4,7 @@ import org.specs.comp.ollir.*;
 
 import java.util.ArrayList;
 
-public class InstructionTranslator {
+public class InstructionGenerator {
     private int indentationLevel = 1;
     private int labelCounter = 0;
 
