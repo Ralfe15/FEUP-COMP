@@ -129,17 +129,46 @@ public class MySymbolTable implements SymbolTable {
         }
         return false;
     }
-    public Type getSymbolByNameWithParent(String varName,String methodOrClassname){
-         MethodInfo method = getMethod(methodOrClassname);
+
+    public Symbol getSymbolByNameWithMethodName(String varName, String methodOrClassname){
+        MethodInfo method = getMethod(methodOrClassname);
+        int count = 0;
+        if (method == null) return new Symbol(new Type("UNKNOWN",false),"null");
+        for (var ex : method.getLocalVariables()){
+            var name = ex.getName();
+            if(name.equals(varName))
+            {
+                return new Symbol (method.getLocalVariables().get(count).getType(),methodOrClassname);
+
+            }
+            count++;
+        }
+        for( var a : getArgsByMethod(methodOrClassname)){
+            if ( a.getName().equals(varName)){
+                return new Symbol(a.getType(),methodOrClassname);
+            }
+        }
         for(var symbol : getFields()){
             if(symbol.getName().equals(varName))
             {
-                return symbol.getType();
+                return new Symbol(symbol.getType(),"Field");
 
             }
         }
+        try {
+            Integer.parseInt(varName);
+        } catch(NumberFormatException e) {
+            return new Symbol(new Type("UNKNOWN",false),"null");
+        } catch(NullPointerException e) {
+            return new Symbol(new Type("UNKNOWN",false),"null");
+        }
+        // only got here if we didn't return false
+        return new Symbol(new Type("int",false),"null");
 
+    }
 
+    public Type getSymbolByNameWithParent(String varName,String methodOrClassname){
+         MethodInfo method = getMethod(methodOrClassname);
         int count = 0;
             if (method == null) return new Type("UNKNOWN",false);
             for (var ex : method.getLocalVariables()){
@@ -156,7 +185,13 @@ public class MySymbolTable implements SymbolTable {
                     return a.getType();
                 }
             }
+        for(var symbol : getFields()){
+            if(symbol.getName().equals(varName))
+            {
+                return symbol.getType();
 
+            }
+        }
         try {
             Integer.parseInt(varName);
         } catch(NumberFormatException e) {

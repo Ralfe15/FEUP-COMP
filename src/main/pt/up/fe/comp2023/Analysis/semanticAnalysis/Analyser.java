@@ -186,7 +186,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 while (true){
                     if(parent.getKind().equals("MainMethodDecl")){
                         for(var field: symbolTable.getFields()){
-                            return (field.getType().equals(symbolTable.getSymbolByNameWithParent(variable,"main")) && field.getName().equals(variable));
+                            return ((symbolTable.getSymbolByNameWithMethodName(variable,"main")).getName().equals("Field") && field.getName().equals(variable));
                         }
                         return false;
                     }
