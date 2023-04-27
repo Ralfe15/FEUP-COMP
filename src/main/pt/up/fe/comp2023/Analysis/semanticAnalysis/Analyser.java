@@ -269,6 +269,8 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
 
     public boolean isBool(JmmNode node) {
         String parentName = getParentMethodName(node);
+        if ( node.hasAttribute("type") && node.get("type").equals("ANY")) return true;
+
         if (node.hasAttribute("value")) {
 
             return symbolTable.getSymbolByNameWithParent(getTypeSafe(node), parentName).getName().equals("boolean");
@@ -288,6 +290,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
     public boolean isInt(JmmNode node) {
         String parentName = getParentMethodName(node);
+        if ( node.hasAttribute("type") && node.get("type").equals("ANY")) return true;
         if (node.hasAttribute("value")) {
 
             return symbolTable.getSymbolByNameWithParent(getTypeSafe(node), parentName).getName().equals("int");
@@ -436,8 +439,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 return new Type(methodInfo, false);
 
             }
+            if(!node.getChildren().isEmpty() && symbolTable.getImports().contains(getTypeSafe(node.getJmmChild(0)))){
+                return new Type("ANY",false);
+            }
         }
         if (!(node.getKind().equals("IntExpr"))) {
+
             return symbolTable.getSymbolByNameWithParent(getTypeSafe(node), getParentMethodName(node));
         } else {
             return symbolTable.getSymbolByName(getTypeSafe(node)) != null ?
@@ -483,21 +490,28 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 return (!node.getJmmChild(0).getJmmChild(0).getChildren().isEmpty()) && (!rhsType.isArray() || !node.getJmmChild(1).getJmmChild(0).getChildren().isEmpty());
             }
 
-            if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || Objects.equals("<", node.get("op"))) {
-                if (!lhsType.getName().equals("int")) {
+            if (Arrays.asList("+", "-", "*", "/").contains(node.get("op"))) {
+                if (!lhsType.getName().equals("int") && !lhsType.getName().equals("ANY")) {
                     return true;
                 }
             }
 
             if (Objects.equals("&&", node.get("op"))) {
-                if (!lhsType.getName().equals("boolean")) {
+                if (!lhsType.getName().equals("boolean") && !lhsType.getName().equals("ANY")) {
                     return true;
                 }
             }
 
-            if (!Arrays.asList("int", "void", "boolean").contains(lhsType.getName())) {
+            if (!Arrays.asList("int", "void", "boolean","ANY").contains(lhsType.getName())) {
                 return true;
             }
+            if ( lhsType.getName().equals("ANY") || rhsType.getName().equals("ANY"))
+            {
+                node.put("type", "ANY");
+                node.put("isArray", String.valueOf(lhsType.isArray()));
+                return false;
+            }
+
             if (Arrays.asList("<",">").contains(node.get("op"))) {
                 node.put("type", new Type("int", false).getName());
                 node.put("isArray", String.valueOf(new Type("int", false).isArray()));
@@ -505,7 +519,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 node.put("type", "INVALID");
                 node.put("isArray", String.valueOf(lhsType.isArray()));
             }
-
             return !(lhsType.getName()).equals(rhsType.getName());
         }
 
@@ -578,8 +591,10 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 if (jmmNode.getJmmChild(0).hasAttribute("bool")) {
                     lhsType = new Type("boolean", false);
                 } else {
-                    lhsType = jmmNode.getJmmChild(0).hasAttribute("value") ? symbolTable.getSymbolByNameWithParent(jmmNode.getJmmChild(0).get("value"), getParentMethodName(jmmNode.getJmmChild(0))) : new Type("UNKNOWN", false);
+                    if(lhsType.getName().equals("UNKNOWN")){
+                        lhsType = jmmNode.getJmmChild(0).hasAttribute("value") ? symbolTable.getSymbolByNameWithParent(jmmNode.getJmmChild(0).get("value"), getParentMethodName(jmmNode.getJmmChild(0))) : new Type("UNKNOWN", false);
 
+                    }
                 }
                 rhsType = getTypeFromSymbolTable(jmmNode.getJmmChild(1), rhsType);
                 if (rhsType.getName().equals("ERROR")) {
