@@ -81,23 +81,15 @@ public class JasminMethodBuilder {
         StringBuilder descriptor = new StringBuilder("(");
 
         for (Element parameter: method.getParams()) {
-            descriptor.append(JasminUtils.translateType(method.getOllirClass(), parameter.getType()));
+            descriptor.append(JasminExtras.translateType(method.getOllirClass(), parameter.getType()));
         }
 
-        descriptor.append(")").append(JasminUtils.translateType(method.getOllirClass(), method.getReturnType()));
+        descriptor.append(")").append(JasminExtras.translateType(method.getOllirClass(), method.getReturnType()));
 
         return descriptor.toString();
     }
 
     public void setMethod(Method method) {
         this.method = method;
-    }
-
-    private int getLocalsLimit() {
-        if (this.method == null) {
-            return 0;
-        }
-
-        return this.method.getVarTable().values().stream().mapToInt(Descriptor::getVirtualReg).max().orElse(0) + 1;
     }
 }

@@ -80,7 +80,7 @@ public class JasminConverter implements JasminBackend {
             }
 
             fieldDefinitions.append(field.getFieldName()).append(" ");
-            fieldDefinitions.append(JasminUtils.translateType(ollirClass, field.getFieldType()));
+            fieldDefinitions.append(JasminExtras.translateType(ollirClass, field.getFieldType()));
 
             fieldDefinitions.append("\n");
         }

@@ -2,7 +2,7 @@ package pt.up.fe.comp2023.Jasmin;
 
 import org.specs.comp.ollir.*;
 
-public class JasminUtils {
+public class JasminExtras {
     public static String translateType(ClassUnit ollirClass, Type type) {
         ElementType elementType = type.getTypeOfElement();
 
@@ -40,8 +40,8 @@ public class JasminUtils {
         return className;
     }
 
-    public static String trimLiteral(String literal) {
-        if (literal.charAt(0) != '"') {
+    public static String removeQuotes(String literal) {
+        if (literal.charAt(0) != '"' || literal.charAt(0) != '\'') {
             return literal;
         }
         return literal.length() == 1 ? literal : literal.substring(1, literal.length() - 1);
