@@ -7,13 +7,10 @@ import java.util.ArrayList;
 public class InstructionTranslator {
     private int indentationLevel = 1;
     private int labelCounter = 0;
-    private int loadCounter = 1;
-    private int maxLoadCounter = 1;
 
     public String translateInstruction(Instruction instruction, Method ancestorMethod) {
         InstructionType instructionType = instruction.getInstType();
         StringBuilder translatedInstruction = new StringBuilder();
-        loadCounter = 1;
 
         switch (instructionType) {
             case CALL:
@@ -50,8 +47,6 @@ public class InstructionTranslator {
                 break;
         }
 
-        this.maxLoadCounter = Integer.max(this.maxLoadCounter, this.loadCounter);
-
         return translatedInstruction.toString();
     }
 
@@ -70,8 +65,7 @@ public class InstructionTranslator {
         Element first = instruction.getOperand();
 
         if (operationType == OperationType.NOT || operationType == OperationType.NOTB) {
-            return getCorrespondingLoad(first, ancestorMethod) + "\n" +
-                    getIndentation() + getIfBody("ifeq");
+            return getCorrespondingLoad(first, ancestorMethod) + "\n";
         }
 
         return "";
@@ -298,7 +292,7 @@ public class InstructionTranslator {
 
                             int literal = Integer.parseInt(JasminUtils.removeQuotes(literalElement.getLiteral()));
                             if (literal == 0) {
-                                return getCorrespondingLoad(first, ancestorMethod) + "\n" + getIndentation() + this.getIfBody("iflt");
+                                return getCorrespondingLoad(first, ancestorMethod) + "\n";
                             } else {
                                 throw new Exception("");
                             }
@@ -306,14 +300,14 @@ public class InstructionTranslator {
                             throw new Exception("");
                         }
                     } catch (Exception e) {
-                        operationString = this.getIfBody("if_icmplt");
+                        operationString = "";
                     }
                 } else if (operationType == OperationType.AND || operationType == OperationType.ANDB) {
                     operationString = "iand";
                 } else if (operationType == OperationType.OR || operationType == OperationType.ORB) {
                     operationString = "ior";
                 } else {
-                    operationString = this.getIfBody("if_icmpeq");
+                    operationString = "";
                 }
 
                 return loads + getIndentation() + operationString;
@@ -359,7 +353,6 @@ public class InstructionTranslator {
     }
 
     private String getCorrespondingLoad(Element element, Method ancestorMethod) {
-        this.loadCounter += 1;
         if (element.isLiteral()) {
             LiteralElement literalElement = (LiteralElement) element;
 
@@ -403,7 +396,6 @@ public class InstructionTranslator {
                 case BOOLEAN:
                     return getIndentation() + "iload" + spacer + operandDescriptor.getVirtualReg();
                 case ARRAYREF:
-                    loadCounter += 1;
                     StringBuilder jasminInstruction = new StringBuilder();
 
                     jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg());
@@ -425,7 +417,6 @@ public class InstructionTranslator {
                 case OBJECTREF:
                 case THIS:
                 case STRING:
-                    loadCounter += 1;
                     return getIndentation() + "aload" + spacer + operandDescriptor.getVirtualReg();
                 default:
                     return "";
@@ -492,30 +483,7 @@ public class InstructionTranslator {
         return Integer.toString(operandDescriptor.getVirtualReg());
     }
 
-    private String getIfBody(String comparisonInstruction) {
-        StringBuilder ifBody = new StringBuilder();
-        ifBody.append(comparisonInstruction).append(" Then_").append(this.labelCounter).append("\n");
-        ifBody.append(getIndentation()).append("ldc 0").append("\n");
-        ifBody.append(getIndentation()).append("goto Finally_").append(this.labelCounter).append("\n");
-        this.indentationLevel--;
-        ifBody.append(getIndentation()).append("Then_").append(this.labelCounter).append(":").append("\n");
-        this.indentationLevel++;
-
-        ifBody.append(getIndentation()).append("ldc 1").append("\n");
-
-        this.indentationLevel--;
-        ifBody.append(getIndentation()).append("Finally_").append(this.labelCounter).append(":");
-        this.indentationLevel++;
-        this.labelCounter++;
-
-        return ifBody.toString();
-    }
-
     private String getIndentation() {
         return "\t".repeat(this.indentationLevel);
-    }
-
-    public int getMaxLoadCounter() {
-        return maxLoadCounter;
     }
 }
