@@ -92,12 +92,35 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     }
 
     private String visitArray(JmmNode jmmNode, List<Report> reports) {
+        for (JmmNode child : jmmNode.getChildren()) {
+            visit(child, reports);
+        }
         var varName = getTypeSafe(jmmNode.getJmmChild(0));
         if (isPrimitive(varName)){
             addSemanticErrorReport(reports, jmmNode, "Cannot access primitive variable");
             return "<Invalid>";
         }
+        String identifier;
+        if ( jmmNode.hasAttribute("value")){
+            identifier = jmmNode.get("value");}
+        else if(jmmNode.hasAttribute("method")) {
+            identifier = jmmNode.get("method");
+        }
+        else {
+            identifier = "UNKNOWN";
+        }
+        Type identifierType = symbolTable.getSymbolByNameWithParent(identifier,getParentMethodName(jmmNode));
+
+        if ( jmmNode.getKind().equals("ArrayAccessExpr")){
+            identifierType =  getType(jmmNode.getJmmChild(0));
+        }
+
+        if (!jmmNode.getChildren().isEmpty() && !jmmNode.getJmmChild(0).getChildren().isEmpty()) {
+            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "' cannot be accessed .");
+            return "<Invalid>";
+        }
         return "";
+
     }
 
 
@@ -192,7 +215,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     public String getParentMethodName(JmmNode node){
         var condition = true;
         var parent = node.getJmmParent();
-        var parentName = "";
         while (condition){
             if(parent.getKind().equals("MainMethodDecl")){
                 return "main";
@@ -398,6 +420,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     private boolean isInvalidOperator(JmmNode node, Type lhsType, Type rhsType) {
         if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || List.of("&&").contains(node.get("op")) || List.of("<").contains(node.get("op"))) {
             if (lhsType.isArray()) {
+                if(lhsType.isArray() && rhsType.isArray()) return false;
                 return true;
             }
 
@@ -635,8 +658,15 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                     type = getType(jmmNode.getJmmChild(0)).getName();
                 }
                 else{
-                    type =symbolTable.getSymbolByNameWithParent(getTypeSafe(jmmNode.getJmmChild(0)),getParentMethodName(jmmNode.getJmmChild(0))).getName();
-
+                    Type typeT =symbolTable.getSymbolByNameWithParent(getTypeSafe(jmmNode.getJmmChild(0)),getParentMethodName(jmmNode.getJmmChild(0)));
+                    if (!typeT.equals(identifierType) && jmmNode.getJmmParent().getKind().equals("ArrayAccessExpr")) {
+                        if(!jmmNode.getChildren().isEmpty() && !isPrimitive(getTypeSafe(jmmNode.getJmmChild(0)))){
+                            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + "'indexes are int");
+                            return "<Invalid>";
+                        }
+                    }
+                    if( jmmNode.getJmmParent().getKind().equals("ArrayAccessExpr") && jmmNode.getKind().equals("IdExpr") && !jmmNode.getChildren().isEmpty()) visit(jmmNode.getJmmChild(0), reports);
+                    type = typeT.getName();
                 }
 
                 if(type.equals("boolean") || type.equals("void"))
@@ -678,7 +708,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + " cannot be accessed .");
             return "<Invalid>";
         }
-
+        if(!jmmNode.getChildren().isEmpty())visit(jmmNode.getJmmChild(0), reports);
         return "";
     }
 
