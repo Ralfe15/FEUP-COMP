@@ -420,7 +420,8 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
     private boolean isInvalidOperator(JmmNode node, Type lhsType, Type rhsType) {
         if (Arrays.asList("+", "-", "*", "/").contains(node.get("op")) || List.of("&&").contains(node.get("op")) || List.of("<").contains(node.get("op"))) {
             if (lhsType.isArray()) {
-                if(lhsType.isArray() && rhsType.isArray()) return false;
+                if(lhsType.isArray() && rhsType.isArray()) {
+                    return false;}
                 return true;
             }
 
@@ -545,6 +546,12 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
             if (isBinaryOp( lhsNode)) {
                 stack.push(lhsNode);
             } else {
+
+                if(lhsType.isArray() && rhsType.isArray()){
+                    for (JmmNode child : jmmNode.getChildren()) {
+                        visit(child, reports);
+                    }
+                }
                 if (isInvalidOperator(jmmNode, lhsType, rhsType)) {
                     addSemanticErrorReport(reports, jmmNode, "Invalid operator " + jmmNode.get("op") + " applied to " + lhsType.print() + " and " + rhsType.print());
                     return "<INVALID>";
@@ -705,7 +712,6 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
         identifierType = symbolTable.getSymbolByNameWithParent(identifier,getParentMethodName(jmmNode));
 
         if (hasArrayAccess(jmmNode) && !identifierType.isArray()) {
-            addSemanticErrorReport(reports, jmmNode, "Variable '" + identifier + " cannot be accessed .");
             return "<Invalid>";
         }
         if(!jmmNode.getChildren().isEmpty())visit(jmmNode.getJmmChild(0), reports);
