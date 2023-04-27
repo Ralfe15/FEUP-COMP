@@ -2,7 +2,7 @@ package pt.up.fe.comp2023.Jasmin;
 
 import org.specs.comp.ollir.*;
 
-public class JasminExtras {
+public class JasminUtils {
     public static String translateType(ClassUnit ollirClass, Type type) {
         ElementType elementType = type.getTypeOfElement();
 

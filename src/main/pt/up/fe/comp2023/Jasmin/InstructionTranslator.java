@@ -101,7 +101,7 @@ public class InstructionTranslator {
         ClassType classType = (ClassType) destinationObject.getType();
 
         jasminInstruction.append(classType.getName()).append("/").append(((Operand) destinationField).getName());
-        jasminInstruction.append(" ").append(JasminExtras.translateType(ancestorMethod.getOllirClass(), destinationField.getType()));
+        jasminInstruction.append(" ").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), destinationField.getType()));
 
         return jasminInstruction.toString();
     }
@@ -127,7 +127,7 @@ public class InstructionTranslator {
         ClassType classType = (ClassType) destinationObject.getType();
 
         jasminInstruction.append(classType.getName()).append("/").append(((Operand) destinationField).getName());
-        jasminInstruction.append(" ").append(JasminExtras.translateType(ancestorMethod.getOllirClass(), destinationField.getType()));
+        jasminInstruction.append(" ").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), destinationField.getType()));
 
         return jasminInstruction.toString();
     }
@@ -175,7 +175,7 @@ public class InstructionTranslator {
 
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
-                    parametersDescriptor.append(JasminExtras.translateType(ancestorMethod.getOllirClass(), element.getType()));
+                    parametersDescriptor.append(JasminUtils.translateType(ancestorMethod.getOllirClass(), element.getType()));
                 }
 
                 jasminInstruction.append(getIndentation());
@@ -186,15 +186,15 @@ public class InstructionTranslator {
                     jasminInstruction.append("invokevirtual ");
 
                     ClassType classType = (ClassType) instruction.getFirstArg().getType();
-                    jasminInstruction.append(JasminExtras.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
+                    jasminInstruction.append(JasminUtils.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
                 }
 
 
-                jasminInstruction.append(".").append(JasminExtras.removeQuotes(methodName.getLiteral()));
+                jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
 
 
-                jasminInstruction.append(")").append(JasminExtras.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
+                jasminInstruction.append(")").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
                 break;
             case invokespecial:
                 if (ancestorMethod.isConstructMethod()) {
@@ -205,7 +205,7 @@ public class InstructionTranslator {
 
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
-                    parametersDescriptor.append(JasminExtras.translateType(ancestorMethod.getOllirClass(), element.getType()));
+                    parametersDescriptor.append(JasminUtils.translateType(ancestorMethod.getOllirClass(), element.getType()));
                 }
 
                 jasminInstruction.append(getIndentation());
@@ -218,15 +218,15 @@ public class InstructionTranslator {
                     }
                 } else {
                     ClassType classType = (ClassType) instruction.getFirstArg().getType();
-                    jasminInstruction.append(JasminExtras.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
+                    jasminInstruction.append(JasminUtils.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
                 }
 
 
-                jasminInstruction.append(".").append(JasminExtras.removeQuotes(methodName.getLiteral()));
+                jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
 
 
-                jasminInstruction.append(")").append(JasminExtras.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
+                jasminInstruction.append(")").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
 
                 if (!ancestorMethod.isConstructMethod()) {
                     jasminInstruction.append("\n").append(getCorrespondingStore(instruction.getFirstArg(), ancestorMethod));
@@ -296,7 +296,7 @@ public class InstructionTranslator {
                         if (second.isLiteral()) {
                             LiteralElement literalElement = (LiteralElement) second;
 
-                            int literal = Integer.parseInt(JasminExtras.removeQuotes(literalElement.getLiteral()));
+                            int literal = Integer.parseInt(JasminUtils.removeQuotes(literalElement.getLiteral()));
                             if (literal == 0) {
                                 return getCorrespondingLoad(first, ancestorMethod) + "\n" + getIndentation() + this.getIfBody("iflt");
                             } else {
@@ -325,7 +325,7 @@ public class InstructionTranslator {
         jasminInstruction.append("iinc ").append(this.getVirtualReg(operand, ancestorMethod));
         jasminInstruction.append(" ");
 
-        jasminInstruction.append(JasminExtras.removeQuotes(literalElement.getLiteral()));
+        jasminInstruction.append(JasminUtils.removeQuotes(literalElement.getLiteral()));
         return getIndentation() + jasminInstruction + "\n" + getCorrespondingLoad(operand, ancestorMethod);
     }
 
@@ -367,7 +367,7 @@ public class InstructionTranslator {
                 case INT32:
                 case BOOLEAN:
                     StringBuilder jasminInstruction = new StringBuilder(getIndentation());
-                    String literal = JasminExtras.removeQuotes(literalElement.getLiteral());
+                    String literal = JasminUtils.removeQuotes(literalElement.getLiteral());
 
                     try {
                         int literalInt = Integer.parseInt(literal);

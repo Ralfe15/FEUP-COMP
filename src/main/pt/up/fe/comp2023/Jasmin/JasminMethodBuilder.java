@@ -81,10 +81,10 @@ public class JasminMethodBuilder {
         StringBuilder descriptor = new StringBuilder("(");
 
         for (Element parameter: method.getParams()) {
-            descriptor.append(JasminExtras.translateType(method.getOllirClass(), parameter.getType()));
+            descriptor.append(JasminUtils.translateType(method.getOllirClass(), parameter.getType()));
         }
 
-        descriptor.append(")").append(JasminExtras.translateType(method.getOllirClass(), method.getReturnType()));
+        descriptor.append(")").append(JasminUtils.translateType(method.getOllirClass(), method.getReturnType()));
 
         return descriptor.toString();
     }
