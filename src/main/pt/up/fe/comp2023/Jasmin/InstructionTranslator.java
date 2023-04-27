@@ -127,10 +127,6 @@ public class InstructionTranslator {
 
         Instruction rhs = instruction.getRhs();
 
-        if (destination instanceof ArrayOperand) {
-            return getCorrespondingStore(destination, ancestorMethod) + "\n" + translateInstruction(rhs, ancestorMethod) + "\n" + getIndentation() + "iastore";
-        }
-
         if (rhs.getInstType() == InstructionType.CALL) {
             CallInstruction callInstruction = (CallInstruction) rhs;
             if (callInstruction.getInvocationType() == CallType.NEW) {
@@ -313,17 +309,6 @@ public class InstructionTranslator {
             case OBJECTREF:
             case CLASS:
             case STRING:
-            case ARRAYREF:
-                jasminInstruction.append(getCorrespondingLoad(instruction.getOperand(), ancestorMethod)).append("\n");
-
-                jasminInstruction.append(getIndentation());
-                if (returnType == ElementType.BOOLEAN || returnType == ElementType.INT32) {
-                    jasminInstruction.append("ireturn");
-                } else {
-                    jasminInstruction.append("areturn");
-                }
-
-                break;
             case VOID:
                 jasminInstruction.append(getIndentation()).append("return");
                 break;
