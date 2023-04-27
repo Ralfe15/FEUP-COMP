@@ -392,7 +392,8 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
             String ollirType = getOllirType(t1.getVariableType());
             var closestMethod = getClosestMethod(node);
             boolean isClassField = symbolTable.getFields().stream().anyMatch(s -> s.getName().equals(t1.getVariableName())) && closestMethod.isPresent()
-                    && symbolTable.getLocalVariables(getMethodName(closestMethod.get())).stream().noneMatch(s -> s.getName().equals(t1.getVariableName()));
+                    && symbolTable.getLocalVariables(getMethodName(closestMethod.get())).stream().noneMatch(s -> s.getName().equals(t1.getVariableName())) &&
+                    symbolTable.getParameters(getMethodName(closestMethod.get())).stream().noneMatch(s->s.getName().equals(t1.getVariableName()));
             startNewLine();
             if (isClassField) {
                 ollirCode.append(OllirUtils.putField("this", t1.getSubstituteWithType(), t2.getSubstituteWithType())).append(";");
@@ -484,7 +485,8 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         }
 
         boolean isClassField = symbolTable.getFields().stream().anyMatch(s -> s.getName().equals(variableName))
-                && symbolTable.getLocalVariables(methodName).stream().noneMatch(s -> s.getName().equals(variableName));
+                && symbolTable.getLocalVariables(methodName).stream().noneMatch(s -> s.getName().equals(variableName)) &&
+                symbolTable.getParameters(methodName).stream().noneMatch(s->s.getName().equals(variableName));;
         boolean isAssign = node.getAncestor("AssignmentExpr").isPresent()
                 && node.getAncestor("AssignmentExpr").get().get("op").equals("=")
                 && node.getAncestor("AssignmentExpr").get().getJmmChild(0).equals(node);
@@ -498,7 +500,13 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
             substituteVariable.setValue(getSafeVariableName(tempHolder.getVariableName()));
         } else {
             substituteVariable.setVariableName(variableName);
-            substituteVariable.setValue((isParameter ? "$" + parameterNumber + "." : "") + getSafeVariableName(variableName));
+            if (isParameter && symbolTable.getLocalVariables(methodName).stream().noneMatch(s -> s.getName().equals(variableName))){
+                substituteVariable.setValue("$" + parameterNumber + "."+ getSafeVariableName(variableName));
+
+            }
+            else{
+                substituteVariable.setValue(getSafeVariableName(variableName));
+            }
         }
         return true;
     }
