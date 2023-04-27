@@ -410,18 +410,6 @@ public class InstructionTranslator {
                 case ARRAYREF:
                     StringBuilder jasminInstruction = new StringBuilder();
 
-                    if (element instanceof ArrayOperand) {
-                        ArrayOperand arrayOperand = (ArrayOperand) operand;
-                        jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg()).append("\n");
-
-                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
-                        Element index = indexes.get(0);
-
-                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod)).append("\n");
-                    } else {
-                        jasminInstruction.append(getIndentation()).append("astore").append(spacer).append(operandDescriptor.getVirtualReg());
-                    }
-
                     return jasminInstruction.toString();
                 default:
                     return "";
