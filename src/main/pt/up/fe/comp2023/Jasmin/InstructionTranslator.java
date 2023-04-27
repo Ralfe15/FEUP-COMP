@@ -376,18 +376,6 @@ public class InstructionTranslator {
 
                     jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg());
 
-                    if (element instanceof ArrayOperand) {
-                        ArrayOperand arrayOperand = (ArrayOperand) operand;
-
-                        jasminInstruction.append("\n");
-
-                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
-                        Element index = indexes.get(0);
-
-                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod)).append("\n");
-                        jasminInstruction.append(getIndentation()).append("iaload");
-                    }
-
                     return jasminInstruction.toString();
                 case CLASS:
                 case OBJECTREF:
@@ -413,18 +401,6 @@ public class InstructionTranslator {
             switch (operand.getType().getTypeOfElement()) {
                 case INT32:
                 case BOOLEAN:
-                    if (element instanceof ArrayOperand) {
-                        ArrayOperand arrayOperand = (ArrayOperand) operand;
-                        StringBuilder jasminInstruction = new StringBuilder();
-                        jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg()).append("\n");
-
-                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
-                        Element index = indexes.get(0);
-
-                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod));
-                        return jasminInstruction.toString();
-                    }
-
                     return getIndentation() + "istore" + spacer + operandDescriptor.getVirtualReg();
                 case CLASS:
                 case OBJECTREF:
