@@ -182,7 +182,13 @@ public class MySymbolTable implements SymbolTable {
                 }
             }
         }
+            for(var symbol : getFields()){
+                if(symbol.getName().equals(varName))
+                {
+                    return symbol.getType();
 
+                }
+            }
             try {
                 Integer.parseInt(varName);
             } catch(NumberFormatException e) {
