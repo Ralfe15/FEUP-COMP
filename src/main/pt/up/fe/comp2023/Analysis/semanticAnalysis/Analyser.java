@@ -308,7 +308,7 @@ public class Analyser extends AJmmVisitor<List<Report>, String> {
                 return type;
             case "IdExpr":
                 if(!jmmNode.getChildren().isEmpty()){
-                    return getType(jmmNode.getJmmChild(0));
+                    return new Type(symbolTable.getSymbolByNameWithParent(getTypeSafe(jmmNode),getParentMethodName(jmmNode)).getName(),false);
                 }
                 return symbolTable.getSymbolByNameWithParent(getTypeSafe(jmmNode),getParentMethodName(jmmNode));
             case "IntExpr":
