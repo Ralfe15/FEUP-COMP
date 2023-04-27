@@ -131,7 +131,17 @@ public class MySymbolTable implements SymbolTable {
     }
     public Type getSymbolByNameWithParent(String varName,String methodOrClassname){
          MethodInfo method = getMethod(methodOrClassname);
-            int count = 0;
+        for(var symbol : getFields()){
+            if(symbol.getName().equals(varName))
+            {
+                return symbol.getType();
+
+            }
+        }
+
+
+        int count = 0;
+            if (method == null) return new Type("UNKNOWN",false);
             for (var ex : method.getLocalVariables()){
                 var name = ex.getName();
                 if(name.equals(varName))
@@ -146,7 +156,6 @@ public class MySymbolTable implements SymbolTable {
                     return a.getType();
                 }
             }
-
 
         try {
             Integer.parseInt(varName);
