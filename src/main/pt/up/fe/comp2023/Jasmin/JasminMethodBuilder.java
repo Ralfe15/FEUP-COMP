@@ -11,6 +11,9 @@ public class JasminMethodBuilder {
     public String getMethodDefinition() {
         StringBuilder methodDefinition = new StringBuilder();
 
+        methodDefinition.append("\t.limit stack 99\n");
+        methodDefinition.append("\t.limit locals 99\n");
+
         if (method.isConstructMethod()) {
             method.setMethodName("<init>");
         }
@@ -40,9 +43,6 @@ public class JasminMethodBuilder {
                     instructions.append("\tpop\n");
             }
         }
-
-        methodDefinition.append("\t.limit stack ").append(instructionTranslator.getMaxLoadCounter()).append("\n");
-        methodDefinition.append("\t.limit locals ").append(this.getLocalsLimit()).append("\n");
 
         methodDefinition.append(instructions);
 
