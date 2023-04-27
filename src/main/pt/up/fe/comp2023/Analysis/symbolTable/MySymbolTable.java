@@ -166,11 +166,22 @@ public class MySymbolTable implements SymbolTable {
         return new Symbol(new Type("int",false),"null");
 
     }
+    public Type getTypeIfField( String varName){
+        for(var field : getFields()){
+            if(field.getName().equals(varName))
+            {
+                return field.getType();
 
+            }
+        }
+        return new Type("UNKNOWN",false);
+    }
     public Type getSymbolByNameWithParent(String varName,String methodOrClassname){
          MethodInfo method = getMethod(methodOrClassname);
         int count = 0;
-            if (method == null) return new Type("UNKNOWN",false);
+            if (method == null){
+                return getTypeIfField(varName);
+            }
             for (var ex : method.getLocalVariables()){
                 var name = ex.getName();
                 if(name.equals(varName))
@@ -185,13 +196,7 @@ public class MySymbolTable implements SymbolTable {
                     return a.getType();
                 }
             }
-        for(var symbol : getFields()){
-            if(symbol.getName().equals(varName))
-            {
-                return symbol.getType();
-
-            }
-        }
+        if (!getTypeIfField(varName).getName().equals("UNKNOWN")) { return getTypeIfField(varName);}
         try {
             Integer.parseInt(varName);
         } catch(NumberFormatException e) {
@@ -226,14 +231,9 @@ public class MySymbolTable implements SymbolTable {
                 }
             }
         }
-            for(var symbol : getFields()){
-                if(symbol.getName().equals(varName))
-                {
-                    return symbol.getType();
+        if (!getTypeIfField(varName).getName().equals("UNKNOWN")) { return getTypeIfField(varName);}
 
-                }
-            }
-            try {
+        try {
                 Integer.parseInt(varName);
             } catch(NumberFormatException e) {
                 return new Type("UNKNOWN",false);
