@@ -79,7 +79,7 @@ expression
     | 'new' 'int' '[' expression ']' #NewIntArrayExpr
     | 'new' object=ID '(' ')' #NewObjectExpr
     | bool=( 'true' | 'false' ) #BoolExpr
-    | value=ID ('[' expression ']')? #IdExpr
+    | value=ID #IdExpr
     | value=INTEGER #IntExpr
     | value='this' #ThisExpr
     ;
