@@ -58,18 +58,18 @@ public class Launcher {
 
         System.out.println(analysisResult.getSymbolTable().print());
 
-        // Optimization stage
-        //MyJmmOptimizer optimizer = new MyJmmOptimizer();
-        //OllirResult ollirResult = optimizer.toOllir(analysisResult);
+//         Optimization stage
+        MyJmmOptimizer optimizer = new MyJmmOptimizer();
+        OllirResult ollirResult = optimizer.toOllir(analysisResult);
 
 
         // ---------- OLLIR -> JASMIN -------------
-        OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
-
-        JasminConverter jasminConverter = new JasminConverter();
-        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
-
-        System.out.println(jasminCode);
+//        OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
+//
+//        JasminConverter jasminConverter = new JasminConverter();
+//        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
+//
+//        System.out.println(jasminCode);
     }
 
     private static Map<String, String> parseArgs(String[] args) {

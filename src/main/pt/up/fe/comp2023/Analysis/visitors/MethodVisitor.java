@@ -72,7 +72,6 @@ public class MethodVisitor extends AJmmVisitor<Map<String, MethodInfo>, Boolean>
         List<Symbol> args = new ArrayList<>();
         args.add(new Symbol(new Type("String", true), "args"));
         List<Symbol> localVariables = new ArrayList<>();
-        System.out.println(methodDeclaration.getChildren());
         for (JmmNode child : methodDeclaration.getChildren()) {
             if (child.getKind().equals("VarDeclaration")) {
                 String varName = child.get("varName");

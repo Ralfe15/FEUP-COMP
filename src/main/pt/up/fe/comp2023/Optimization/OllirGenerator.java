@@ -243,6 +243,15 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
             for (var arg : node.getJmmChild(1).getChildren()) {
                 TempVar methodArgument = createTemporaryVariable(node);
                 visit(arg, methodArgument);
+                if (arg.getKind().equals("ArrayAccessExpr")){
+                    System.out.println(node.getKind());
+                    TempVar idxHolder = createTemporaryVariable(node);
+                    idxHolder.setVariableType(new Type("int", false));
+                    startNewLine();
+                    ollirCode.append(createTemporaryAssign(idxHolder, methodArgument.getSubstituteWithType()));
+                    methodArgument = idxHolder;
+                }
+
                 arguments.add(methodArgument);
             }
 
