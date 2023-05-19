@@ -2,18 +2,15 @@ package pt.up.fe.comp2023;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
-import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
-import pt.up.fe.comp2023.Analysis.semanticAnalysis.MyJmmAnalysis;
-import pt.up.fe.comp2023.Jasmin.JasminConverter;
-import pt.up.fe.comp2023.Optimization.MyJmmOptimizer;
+import pt.up.fe.comp2023.analysis.semanticAnalysis.MyJmmAnalysis;
+import pt.up.fe.comp2023.optimization.MyJmmOptimizer;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
 import pt.up.fe.specs.util.SpecsSystem;

@@ -1,9 +1,9 @@
-package pt.up.fe.comp2023.Optimization;
+package pt.up.fe.comp2023.optimization;
 
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable;
+import pt.up.fe.comp2023.analysis.symbolTable.MySymbolTable;
 
 import java.util.Collections;
 

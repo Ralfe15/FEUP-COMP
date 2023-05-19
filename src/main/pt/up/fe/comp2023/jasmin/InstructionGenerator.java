@@ -1,8 +1,6 @@
-package pt.up.fe.comp2023.Jasmin;
+package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
-
-import java.util.ArrayList;
 
 public class InstructionGenerator {
     private int indentationLevel = 1;

@@ -1,19 +1,17 @@
-package pt.up.fe.comp2023.Optimization;
+package pt.up.fe.comp2023.optimization;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp.jmm.ast.PreorderJmmVisitor;
-import pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable;
+import pt.up.fe.comp2023.analysis.symbolTable.MySymbolTable;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.Collectors;
 
-import static pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable.getClosestMethod;
-import static pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable.getMethodName;
-import static pt.up.fe.comp2023.Optimization.OllirUtils.*;
+import static pt.up.fe.comp2023.analysis.symbolTable.MySymbolTable.getClosestMethod;
+import static pt.up.fe.comp2023.analysis.symbolTable.MySymbolTable.getMethodName;
+import static pt.up.fe.comp2023.optimization.OllirUtils.*;
 
 
 public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {

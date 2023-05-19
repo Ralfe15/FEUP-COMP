@@ -1,13 +1,12 @@
-package pt.up.fe.comp2023.Analysis.visitors;
+package pt.up.fe.comp2023.analysis.visitors;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2023.Analysis.types.MethodInfo;
+import pt.up.fe.comp2023.analysis.types.MethodInfo;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 

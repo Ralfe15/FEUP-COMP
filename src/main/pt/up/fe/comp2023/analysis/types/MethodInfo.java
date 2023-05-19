@@ -1,11 +1,10 @@
-package pt.up.fe.comp2023.Analysis.types;
+package pt.up.fe.comp2023.analysis.types;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class MethodInfo {
     final Type retType;

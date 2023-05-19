@@ -1,12 +1,9 @@
-package pt.up.fe.comp2023.Analysis.visitors;
+package pt.up.fe.comp2023.analysis.visitors;
 
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.ast.JmmNode;
-import pt.up.fe.comp2023.Analysis.types.ClassInfo;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ImportVisitor extends AJmmVisitor<List<String>, Boolean> {
     @Override

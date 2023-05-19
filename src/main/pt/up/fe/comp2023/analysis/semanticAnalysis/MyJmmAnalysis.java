@@ -1,11 +1,10 @@
-package pt.up.fe.comp2023.Analysis.semanticAnalysis;
+package pt.up.fe.comp2023.analysis.semanticAnalysis;
 
 import pt.up.fe.comp.jmm.analysis.JmmAnalysis;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable;
-import pt.up.fe.comp2023.Analysis.semanticAnalysis.Analyser;
+import pt.up.fe.comp2023.analysis.symbolTable.MySymbolTable;
 
 import java.util.ArrayList;
 import java.util.List;

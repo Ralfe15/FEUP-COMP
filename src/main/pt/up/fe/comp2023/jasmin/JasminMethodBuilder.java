@@ -1,9 +1,8 @@
-package pt.up.fe.comp2023.Jasmin;
+package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class JasminMethodBuilder {
     private Method method;

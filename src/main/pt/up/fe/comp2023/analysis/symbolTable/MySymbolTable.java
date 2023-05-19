@@ -1,4 +1,4 @@
-package pt.up.fe.comp2023.Analysis.symbolTable;
+package pt.up.fe.comp2023.analysis.symbolTable;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.SymbolTable;
@@ -6,11 +6,11 @@ import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
-import pt.up.fe.comp2023.Analysis.types.ClassInfo;
-import pt.up.fe.comp2023.Analysis.types.MethodInfo;
-import pt.up.fe.comp2023.Analysis.visitors.ClassVisitor;
-import pt.up.fe.comp2023.Analysis.visitors.ImportVisitor;
-import pt.up.fe.comp2023.Analysis.visitors.MethodVisitor;
+import pt.up.fe.comp2023.analysis.types.ClassInfo;
+import pt.up.fe.comp2023.analysis.types.MethodInfo;
+import pt.up.fe.comp2023.analysis.visitors.ClassVisitor;
+import pt.up.fe.comp2023.analysis.visitors.ImportVisitor;
+import pt.up.fe.comp2023.analysis.visitors.MethodVisitor;
 
 import java.util.ArrayList;
 import java.util.*;

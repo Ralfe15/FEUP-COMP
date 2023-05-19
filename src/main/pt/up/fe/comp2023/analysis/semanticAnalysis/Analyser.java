@@ -1,11 +1,11 @@
-package pt.up.fe.comp2023.Analysis.semanticAnalysis;
+package pt.up.fe.comp2023.analysis.semanticAnalysis;
 
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
-import pt.up.fe.comp2023.Analysis.symbolTable.MySymbolTable;
+import pt.up.fe.comp2023.analysis.symbolTable.MySymbolTable;
 import pt.up.fe.comp.jmm.ast.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
