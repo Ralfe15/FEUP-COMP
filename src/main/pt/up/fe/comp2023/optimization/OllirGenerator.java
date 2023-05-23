@@ -223,7 +223,13 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
 
         // Visit attribute
         TempVar attributeChild = createTemporaryVariable(node);
-        visit(node.getJmmChild(0), attributeChild);
+        boolean isParen = node.getJmmChild(0).getKind().equals("ParenExpr");
+        if (!isParen) {
+            visit(node.getJmmChild(0), attributeChild);
+        }
+        else {
+            visit(node.getJmmChild(0).getJmmChild(0), attributeChild);
+        }
         Type elementType = attributeChild.getVariableType();
         String variableName = attributeChild.getVariableName();
 
