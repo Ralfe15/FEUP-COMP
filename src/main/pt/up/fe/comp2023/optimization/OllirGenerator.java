@@ -52,6 +52,7 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
         addVisit("RelExpr", this::visitBinOp);
         addVisit("AndOrExpr", this::visitBinOp);
         addVisit("AssignmentExpr", this::visitBinOp);
+        addVisit("NotExpr", this::visitNotExpr);
 
         // Checkpoint final
         addVisit("IfElseStmt", this::visitIfElse);
@@ -62,6 +63,16 @@ public class OllirGenerator extends AJmmVisitor<TempVar, Boolean> {
 
 
         setDefaultVisit((node, dummy) -> true);
+    }
+
+    private Boolean visitNotExpr(JmmNode node, TempVar tempVar) {
+        TempVar childHolder = createTemporaryVariable(node);
+        visit(node.getJmmChild(0), childHolder);
+        tempVar.setVariableType(childHolder.getVariableType());
+        startNewLine();
+        ollirCode.append(createTemporaryAssign(tempVar, "!.bool " + childHolder.getSubstituteWithType()));
+        tempVar.setVariableType(childHolder.getVariableType());
+        return true;
     }
 
     private TempVar createTemporaryVariable(JmmNode closestNode) {
