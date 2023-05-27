@@ -37,6 +37,7 @@ public class JasminMethodBuilder {
             if (instruction.getInstType() == InstructionType.CALL) {
                 if (((CallInstruction) instruction).getReturnType().getTypeOfElement() != ElementType.VOID)
                     instructions.append("\tpop\n");
+                // quando está do lado direito do assignment, dar pop tb
             }
         }
 
@@ -80,10 +81,10 @@ public class JasminMethodBuilder {
         StringBuilder descriptor = new StringBuilder("(");
 
         for (Element parameter: method.getParams()) {
-            descriptor.append(JasminUtils.translateType(method.getOllirClass(), parameter.getType()));
+            descriptor.append(JasminUtils.translateType(parameter.getType(), method.getOllirClass()));
         }
 
-        descriptor.append(")").append(JasminUtils.translateType(method.getOllirClass(), method.getReturnType()));
+        descriptor.append(")").append(JasminUtils.translateType(method.getReturnType(), method.getOllirClass()));
 
         return descriptor.toString();
     }

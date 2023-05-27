@@ -3,23 +3,17 @@ package pt.up.fe.comp2023.jasmin;
 import org.specs.comp.ollir.*;
 
 public class JasminUtils {
-    public static String translateType(ClassUnit ollirClass, Type type) {
+    public static String translateType(Type type, ClassUnit ollirClass) {
         ElementType elementType = type.getTypeOfElement();
 
-        return switch (elementType) {
-            case ARRAYREF -> "[" + translateType(((ArrayType) type).getArrayType());
-            case OBJECTREF, CLASS -> "L" + getFullClassName(ollirClass, ((ClassType) type).getName()) + ";";
-            default -> translateType(elementType);
-        };
-    }
-
-    private static String translateType(ElementType elementType) {
-        return switch (elementType) {
+        return switch(elementType) {
             case INT32 -> "I";
             case BOOLEAN -> "Z";
             case STRING -> "Ljava/lang/String;";
             case THIS -> "this";
             case VOID -> "V";
+            case ARRAYREF -> "[" + translateType(((ArrayType) type).getElementType(), ollirClass);
+            case OBJECTREF, CLASS -> "L" + getFullClassName(ollirClass, ((ClassType) type).getName()) + ";";
             default -> "";
         };
     }

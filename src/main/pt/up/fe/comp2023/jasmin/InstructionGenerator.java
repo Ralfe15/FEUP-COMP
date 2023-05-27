@@ -85,7 +85,7 @@ public class InstructionGenerator {
         ClassType classType = (ClassType) destinationObject.getType();
 
         jasminInstruction.append(classType.getName()).append("/").append(((Operand) destinationField).getName());
-        jasminInstruction.append(" ").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), destinationField.getType()));
+        jasminInstruction.append(" ").append(JasminUtils.translateType(destinationField.getType(), ancestorMethod.getOllirClass()));
 
         return jasminInstruction.toString();
     }
@@ -111,7 +111,7 @@ public class InstructionGenerator {
         ClassType classType = (ClassType) destinationObject.getType();
 
         jasminInstruction.append(classType.getName()).append("/").append(((Operand) destinationField).getName());
-        jasminInstruction.append(" ").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), destinationField.getType()));
+        jasminInstruction.append(" ").append(JasminUtils.translateType(destinationField.getType(), ancestorMethod.getOllirClass()));
 
         return jasminInstruction.toString();
     }
@@ -155,7 +155,7 @@ public class InstructionGenerator {
 
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
-                    parametersDescriptor.append(JasminUtils.translateType(ancestorMethod.getOllirClass(), element.getType()));
+                    parametersDescriptor.append(JasminUtils.translateType(element.getType(), ancestorMethod.getOllirClass()));
                 }
 
                 jasminInstruction.append(getIndentation());
@@ -174,7 +174,7 @@ public class InstructionGenerator {
                 jasminInstruction.append("(").append(parametersDescriptor);
 
 
-                jasminInstruction.append(")").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
+                jasminInstruction.append(")").append(JasminUtils.translateType(instruction.getReturnType(), ancestorMethod.getOllirClass()));
                 break;
             case invokespecial:
                 if (ancestorMethod.isConstructMethod()) {
@@ -185,7 +185,7 @@ public class InstructionGenerator {
 
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
-                    parametersDescriptor.append(JasminUtils.translateType(ancestorMethod.getOllirClass(), element.getType()));
+                    parametersDescriptor.append(JasminUtils.translateType(element.getType(), ancestorMethod.getOllirClass()));
                 }
 
                 jasminInstruction.append(getIndentation());
@@ -206,7 +206,7 @@ public class InstructionGenerator {
                 jasminInstruction.append("(").append(parametersDescriptor);
 
 
-                jasminInstruction.append(")").append(JasminUtils.translateType(ancestorMethod.getOllirClass(), instruction.getReturnType()));
+                jasminInstruction.append(")").append(JasminUtils.translateType(instruction.getReturnType(), ancestorMethod.getOllirClass()));
 
                 if (!ancestorMethod.isConstructMethod()) {
                     jasminInstruction.append("\n").append(getCorrespondingStore(instruction.getFirstArg(), ancestorMethod));
@@ -302,25 +302,16 @@ public class InstructionGenerator {
         ElementType returnType = instruction.getReturnType().getTypeOfElement();
 
         switch (returnType) {
-            case BOOLEAN:
-            case INT32:
-            case OBJECTREF:
-            case CLASS:
-            case STRING:
-            case ARRAYREF:
+            case BOOLEAN, INT32, OBJECTREF, CLASS, STRING, ARRAYREF -> {
                 jasminInstruction.append(getCorrespondingLoad(instruction.getOperand(), ancestorMethod)).append("\n");
-
                 jasminInstruction.append(getIndentation());
                 if (returnType == ElementType.BOOLEAN || returnType == ElementType.INT32) {
                     jasminInstruction.append("ireturn");
                 } else {
                     jasminInstruction.append("areturn");
                 }
-
-                break;
-            case VOID:
-                jasminInstruction.append(getIndentation()).append("return");
-                break;
+            }
+            case VOID -> jasminInstruction.append(getIndentation()).append("return");
         }
 
         return jasminInstruction.toString();
