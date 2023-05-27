@@ -2,9 +2,13 @@ package pt.up.fe.comp2023.jasmin;
 
 import org.specs.comp.ollir.*;
 
+import java.util.ArrayList;
+
 public class InstructionGenerator {
     private int indentationLevel = 1;
     private int labelCounter = 0;
+    private int loadCounter = 1;
+    private int maxLoadCounter = 1;
 
     public String translateInstruction(Instruction instruction, Method ancestorMethod) {
         InstructionType instructionType = instruction.getInstType();
@@ -125,6 +129,10 @@ public class InstructionGenerator {
 
         Instruction rhs = instruction.getRhs();
 
+        if (destination instanceof ArrayOperand) {
+            return getCorrespondingStore(destination, ancestorMethod) + "\n" + translateInstruction(rhs, ancestorMethod) + "\n" + getIndentation() + "iastore";
+        }
+
         if (rhs.getInstType() == InstructionType.CALL) {
             CallInstruction callInstruction = (CallInstruction) rhs;
             if (callInstruction.getInvocationType() == CallType.NEW) {
@@ -217,7 +225,19 @@ public class InstructionGenerator {
                 if (elementType == ElementType.OBJECTREF || elementType == ElementType.CLASS) {
                     jasminInstruction.append(getIndentation()).append("new ").append(caller.getName()).append("\n");
                     jasminInstruction.append(getIndentation()).append("dup");
+                } else if (elementType == ElementType.ARRAYREF) {
+                    ArrayList<Element> operands = instruction.getListOfOperands();
+                    if (operands.size() < 1) {
+                        return "";
+                    }
+
+                    jasminInstruction.append(getCorrespondingLoad(operands.get(0), ancestorMethod)).append("\n");
+                    jasminInstruction.append(getIndentation()).append("newarray int");
                 }
+                break;
+            case arraylength:
+                jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
+                jasminInstruction.append(getIndentation()).append("arraylength");
                 break;
         }
         return jasminInstruction.toString();
@@ -318,6 +338,7 @@ public class InstructionGenerator {
     }
 
     private String getCorrespondingLoad(Element element, Method ancestorMethod) {
+        this.loadCounter += 1;
         if (element.isLiteral()) {
             LiteralElement literalElement = (LiteralElement) element;
 
@@ -361,9 +382,22 @@ public class InstructionGenerator {
                 case BOOLEAN:
                     return getIndentation() + "iload" + spacer + operandDescriptor.getVirtualReg();
                 case ARRAYREF:
+                    loadCounter += 1;
                     StringBuilder jasminInstruction = new StringBuilder();
 
                     jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg());
+
+                    if (element instanceof ArrayOperand) {
+                        ArrayOperand arrayOperand = (ArrayOperand) operand;
+
+                        jasminInstruction.append("\n");
+
+                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
+                        Element index = indexes.get(0);
+
+                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod)).append("\n");
+                        jasminInstruction.append(getIndentation()).append("iaload");
+                    }
 
                     return jasminInstruction.toString();
                 case CLASS:
@@ -399,6 +433,18 @@ public class InstructionGenerator {
                 case ARRAYREF:
                     StringBuilder jasminInstruction = new StringBuilder();
 
+                    if (element instanceof ArrayOperand) {
+                        ArrayOperand arrayOperand = (ArrayOperand) operand;
+                        jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg()).append("\n");
+
+                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
+                        Element index = indexes.get(0);
+
+                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod)).append("\n");
+                    } else {
+                        jasminInstruction.append(getIndentation()).append("astore").append(spacer).append(operandDescriptor.getVirtualReg());
+                    }
+
                     return jasminInstruction.toString();
                 default:
                     return "";
@@ -414,5 +460,9 @@ public class InstructionGenerator {
 
     private String getIndentation() {
         return "\t".repeat(this.indentationLevel);
+    }
+
+    public int getMaxLoadCounter() {
+        return maxLoadCounter;
     }
 }
