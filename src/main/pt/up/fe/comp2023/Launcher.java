@@ -2,14 +2,17 @@ package pt.up.fe.comp2023;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
+import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.parser.JmmParserResult;
 import pt.up.fe.comp2023.analysis.semanticAnalysis.MyJmmAnalysis;
+import pt.up.fe.comp2023.jasmin.JasminConverter;
 import pt.up.fe.comp2023.optimization.MyJmmOptimizer;
 import pt.up.fe.specs.util.SpecsIo;
 import pt.up.fe.specs.util.SpecsLogs;
@@ -37,36 +40,36 @@ public class Launcher {
 
 
         // Instantiate JmmParser
-        SimpleParser parser = new SimpleParser();
+        //SimpleParser parser = new SimpleParser();
 
         // Parse stage
-        JmmParserResult parserResult = parser.parse(code, config);
+        //JmmParserResult parserResult = parser.parse(code, config);
 
         // Check if there are parsing errors
-        TestUtils.noErrors(parserResult.getReports());
+        //TestUtils.noErrors(parserResult.getReports());
 
         // Instantiate JmmAnalysis
-        MyJmmAnalysis analyser = new MyJmmAnalysis();
+        //MyJmmAnalysis analyser = new MyJmmAnalysis();
 
         // Analysis stage
-        JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
+        //JmmSemanticsResult analysisResult = analyser.semanticAnalysis(parserResult);
         // Check if there are parsing errors
-        TestUtils.noErrors(analysisResult.getReports());
+        //TestUtils.noErrors(analysisResult.getReports());
 
-        System.out.println(analysisResult.getSymbolTable().print());
+        //System.out.println(analysisResult.getSymbolTable().print());
 
 //         Optimization stage
-        MyJmmOptimizer optimizer = new MyJmmOptimizer();
-        OllirResult ollirResult = optimizer.toOllir(analysisResult);
+        // MyJmmOptimizer optimizer = new MyJmmOptimizer();
+        // OllirResult ollirResult = optimizer.toOllir(analysisResult);
 
 
         // ---------- OLLIR -> JASMIN -------------
-//        OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
-//
-//        JasminConverter jasminConverter = new JasminConverter();
-//        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
-//
-//        System.out.println(jasminCode);
+       OllirResult ollirResult = new OllirResult(code, Collections.emptyMap());
+
+        JasminConverter jasminConverter = new JasminConverter();
+        JasminResult jasminCode = jasminConverter.toJasmin(ollirResult);
+
+       System.out.println(jasminCode);
     }
 
     private static Map<String, String> parseArgs(String[] args) {
