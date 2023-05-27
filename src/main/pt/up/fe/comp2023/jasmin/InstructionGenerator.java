@@ -13,40 +13,30 @@ public class InstructionGenerator {
     public String translateInstruction(Instruction instruction, Method ancestorMethod) {
         InstructionType instructionType = instruction.getInstType();
         StringBuilder translatedInstruction = new StringBuilder();
+        loadCounter = 1;
 
         switch (instructionType) {
-            case CALL:
-                translatedInstruction.append(translateInstruction((CallInstruction) instruction, ancestorMethod));
-                break;
-            case RETURN:
-                translatedInstruction.append(translateInstruction((ReturnInstruction) instruction, ancestorMethod));
-                break;
-            case PUTFIELD:
-                translatedInstruction.append(translateInstruction((PutFieldInstruction) instruction, ancestorMethod));
-                break;
-            case GETFIELD:
-                translatedInstruction.append(translateInstruction((GetFieldInstruction) instruction, ancestorMethod));
-                break;
-            case ASSIGN:
-                translatedInstruction.append(translateInstruction((AssignInstruction) instruction, ancestorMethod));
-                break;
-            case BINARYOPER:
-                translatedInstruction.append(translateInstruction((BinaryOpInstruction) instruction, ancestorMethod));
-                break;
-            case UNARYOPER:
-                translatedInstruction.append(translateInstruction((UnaryOpInstruction) instruction, ancestorMethod));
-                break;
-            case NOPER:
-                translatedInstruction.append(translateInstruction((SingleOpInstruction) instruction, ancestorMethod));
-                break;
-            case GOTO:
-                translatedInstruction.append(translateInstruction((GotoInstruction) instruction));
-                break;
-            default:
-                break;
+            case CALL -> translatedInstruction.append(translateInstruction((CallInstruction) instruction, ancestorMethod));
+            case RETURN -> translatedInstruction.append(translateInstruction((ReturnInstruction) instruction, ancestorMethod));
+            case PUTFIELD -> translatedInstruction.append(translateInstruction((PutFieldInstruction) instruction, ancestorMethod));
+            case GETFIELD -> translatedInstruction.append(translateInstruction((GetFieldInstruction) instruction, ancestorMethod));
+            case ASSIGN -> translatedInstruction.append(translateInstruction((AssignInstruction) instruction, ancestorMethod));
+            case BINARYOPER -> translatedInstruction.append(translateInstruction((BinaryOpInstruction) instruction, ancestorMethod));
+            case UNARYOPER -> translatedInstruction.append(translateInstruction((UnaryOpInstruction) instruction, ancestorMethod));
+            case NOPER -> translatedInstruction.append(translateInstruction((SingleOpInstruction) instruction, ancestorMethod));
+            case GOTO -> translatedInstruction.append(translateInstruction((GotoInstruction) instruction));
+            case BRANCH -> translatedInstruction.append(translateInstruction((CondBranchInstruction) instruction, ancestorMethod));
+            default -> {
+            }
         }
 
+        this.maxLoadCounter = Integer.max(this.maxLoadCounter, this.loadCounter);
+
         return translatedInstruction.toString();
+    }
+
+    public String translateInstruction(CondBranchInstruction instruction, Method ancestorMethod) {
+        return translateInstruction(instruction.getCondition(), ancestorMethod) + "\n" + getIndentation() + "ifne " + instruction.getLabel();
     }
 
     public String translateInstruction(GotoInstruction instruction) {
@@ -59,7 +49,7 @@ public class InstructionGenerator {
         Element first = instruction.getOperand();
 
         if (operationType == OperationType.NOT || operationType == OperationType.NOTB) {
-            return getCorrespondingLoad(first, ancestorMethod) + "\n";
+            return getCorrespondingLoad(first, ancestorMethod) + "\n" + getIndentation() + getIfBody("ifeq");
         }
 
         return "";
@@ -155,19 +145,15 @@ public class InstructionGenerator {
         CallType callType = instruction.getInvocationType();
 
         switch (callType) {
-            case invokestatic:
-            case invokevirtual:
+            case invokestatic, invokevirtual -> {
                 if (callType == CallType.invokevirtual) {
                     jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
                 }
-
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
                     parametersDescriptor.append(JasminUtils.translateType(element.getType(), ancestorMethod.getOllirClass()));
                 }
-
                 jasminInstruction.append(getIndentation());
-
                 if (callType == CallType.invokestatic) {
                     jasminInstruction.append("invokestatic ").append(caller.getName());
                 } else {
@@ -176,28 +162,21 @@ public class InstructionGenerator {
                     ClassType classType = (ClassType) instruction.getFirstArg().getType();
                     jasminInstruction.append(JasminUtils.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
                 }
-
-
                 jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
-
-
                 jasminInstruction.append(")").append(JasminUtils.translateType(instruction.getReturnType(), ancestorMethod.getOllirClass()));
-                break;
-            case invokespecial:
+            }
+            case invokespecial -> {
                 if (ancestorMethod.isConstructMethod()) {
                     if (caller.getName().equals("this")) {
                         jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
                     }
                 }
-
                 for (Element element : instruction.getListOfOperands()) {
                     jasminInstruction.append(getCorrespondingLoad(element, ancestorMethod)).append("\n");
                     parametersDescriptor.append(JasminUtils.translateType(element.getType(), ancestorMethod.getOllirClass()));
                 }
-
                 jasminInstruction.append(getIndentation());
-
                 jasminInstruction.append("invokespecial ");
 
                 if (ancestorMethod.isConstructMethod()) {
@@ -209,18 +188,14 @@ public class InstructionGenerator {
                     jasminInstruction.append(JasminUtils.getFullClassName(ancestorMethod.getOllirClass(), classType.getName()));
                 }
 
-
                 jasminInstruction.append(".").append(JasminUtils.removeQuotes(methodName.getLiteral()));
                 jasminInstruction.append("(").append(parametersDescriptor);
-
-
                 jasminInstruction.append(")").append(JasminUtils.translateType(instruction.getReturnType(), ancestorMethod.getOllirClass()));
-
                 if (!ancestorMethod.isConstructMethod()) {
                     jasminInstruction.append("\n").append(getCorrespondingStore(instruction.getFirstArg(), ancestorMethod));
                 }
-                break;
-            case NEW:
+            }
+            case NEW -> {
                 ElementType elementType = caller.getType().getTypeOfElement();
                 if (elementType == ElementType.OBJECTREF || elementType == ElementType.CLASS) {
                     jasminInstruction.append(getIndentation()).append("new ").append(caller.getName()).append("\n");
@@ -234,11 +209,11 @@ public class InstructionGenerator {
                     jasminInstruction.append(getCorrespondingLoad(operands.get(0), ancestorMethod)).append("\n");
                     jasminInstruction.append(getIndentation()).append("newarray int");
                 }
-                break;
-            case arraylength:
+            }
+            case arraylength -> {
                 jasminInstruction.append(getCorrespondingLoad(caller, ancestorMethod)).append("\n");
                 jasminInstruction.append(getIndentation()).append("arraylength");
-                break;
+            }
         }
         return jasminInstruction.toString();
     }
@@ -251,20 +226,9 @@ public class InstructionGenerator {
         StringBuilder jasminInstruction = new StringBuilder();
 
         switch (operationType) {
-            case ADD:
-            case SUB:
-            case MUL:
-            case DIV:
-            case LTH:
-            case AND:
-            case ANDB:
-            case OR:
-            case ORB:
-            case EQ:
+            case ADD, SUB, MUL, DIV, LTH, AND, ANDB, OR, ORB, EQ -> {
                 String operationString;
-                String loads = getCorrespondingLoad(first, ancestorMethod) + "\n"
-                        + getCorrespondingLoad(second, ancestorMethod) + "\n";
-
+                String loads = getCorrespondingLoad(first, ancestorMethod) + "\n" + getCorrespondingLoad(second, ancestorMethod) + "\n";
                 if (operationType == OperationType.ADD) {
                     if (!first.isLiteral() && second.isLiteral()) {
                         return getIinc(ancestorMethod, (LiteralElement) second, (Operand) first, jasminInstruction);
@@ -294,27 +258,19 @@ public class InstructionGenerator {
                             throw new Exception("");
                         }
                     } catch (Exception e) {
-                        operationString = "";
+                        operationString = this.getIfBody("if_icmplt");
                     }
                 } else if (operationType == OperationType.AND || operationType == OperationType.ANDB) {
                     operationString = "iand";
                 } else if (operationType == OperationType.OR || operationType == OperationType.ORB) {
                     operationString = "ior";
                 } else {
-                    operationString = "";
+                    operationString = this.getIfBody("if_icmpeq");
                 }
-
                 return loads + getIndentation() + operationString;
+            }
         }
         return "";
-    }
-
-    private String getIinc(Method ancestorMethod, LiteralElement literalElement, Operand operand, StringBuilder jasminInstruction) {
-        jasminInstruction.append("iinc ").append(this.getVirtualReg(operand, ancestorMethod));
-        jasminInstruction.append(" ");
-
-        jasminInstruction.append(JasminUtils.removeQuotes(literalElement.getLiteral()));
-        return getIndentation() + jasminInstruction + "\n" + getCorrespondingLoad(operand, ancestorMethod);
     }
 
     public String translateInstruction(ReturnInstruction instruction, Method ancestorMethod) {
@@ -335,6 +291,14 @@ public class InstructionGenerator {
         }
 
         return jasminInstruction.toString();
+    }
+
+    private String getIinc(Method ancestorMethod, LiteralElement literalElement, Operand operand, StringBuilder jasminInstruction) {
+        jasminInstruction.append("iinc ").append(this.getVirtualReg(operand, ancestorMethod));
+        jasminInstruction.append(" ");
+
+        jasminInstruction.append(JasminUtils.removeQuotes(literalElement.getLiteral()));
+        return getIndentation() + jasminInstruction + "\n" + getCorrespondingLoad(operand, ancestorMethod);
     }
 
     private String getCorrespondingLoad(Element element, Method ancestorMethod) {
@@ -404,6 +368,7 @@ public class InstructionGenerator {
                 case OBJECTREF:
                 case THIS:
                 case STRING:
+                    loadCounter += 1;
                     return getIndentation() + "aload" + spacer + operandDescriptor.getVirtualReg();
                 default:
                     return "";
@@ -424,6 +389,18 @@ public class InstructionGenerator {
             switch (operand.getType().getTypeOfElement()) {
                 case INT32:
                 case BOOLEAN:
+                    if (element instanceof ArrayOperand) {
+                        ArrayOperand arrayOperand = (ArrayOperand) operand;
+                        StringBuilder jasminInstruction = new StringBuilder();
+                        jasminInstruction.append(getIndentation()).append("aload").append(spacer).append(operandDescriptor.getVirtualReg()).append("\n");
+
+                        ArrayList<Element> indexes = arrayOperand.getIndexOperands();
+                        Element index = indexes.get(0);
+
+                        jasminInstruction.append(getCorrespondingLoad(index, ancestorMethod));
+                        return jasminInstruction.toString();
+                    }
+
                     return getIndentation() + "istore" + spacer + operandDescriptor.getVirtualReg();
                 case CLASS:
                 case OBJECTREF:
@@ -456,6 +433,25 @@ public class InstructionGenerator {
         Descriptor operandDescriptor = ancestorMethod.getVarTable().get(operand.getName());
 
         return Integer.toString(operandDescriptor.getVirtualReg());
+    }
+
+    private String getIfBody(String comparisonInstruction) {
+        StringBuilder ifBody = new StringBuilder();
+        ifBody.append(comparisonInstruction).append(" Then_").append(this.labelCounter).append("\n");
+        ifBody.append(getIndentation()).append("ldc 0").append("\n");
+        ifBody.append(getIndentation()).append("goto Finally_").append(this.labelCounter).append("\n");
+        this.indentationLevel--;
+        ifBody.append(getIndentation()).append("Then_").append(this.labelCounter).append(":").append("\n");
+        this.indentationLevel++;
+
+        ifBody.append(getIndentation()).append("ldc 1").append("\n");
+
+        this.indentationLevel--;
+        ifBody.append(getIndentation()).append("Finally_").append(this.labelCounter).append(":");
+        this.indentationLevel++;
+        this.labelCounter++;
+
+        return ifBody.toString();
     }
 
     private String getIndentation() {

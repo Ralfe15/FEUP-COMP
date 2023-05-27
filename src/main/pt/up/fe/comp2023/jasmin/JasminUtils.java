@@ -14,7 +14,6 @@ public class JasminUtils {
             case VOID -> "V";
             case ARRAYREF -> "[" + translateType(((ArrayType) type).getElementType(), ollirClass);
             case OBJECTREF, CLASS -> "L" + getFullClassName(ollirClass, ((ClassType) type).getName()) + ";";
-            default -> "";
         };
     }
 
