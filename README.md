@@ -10,4 +10,4 @@
 | José Artur Lima Assunção | 202000163 | 33% |
 <br>
 
-**Self-assessment: 18**
+**Self-assessment: 17**
